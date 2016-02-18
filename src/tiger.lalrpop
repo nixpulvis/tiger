@@ -36,22 +36,24 @@ pub Symbol: Symbol = {
 /////////////
 
 pub Expression: Box<Expression> = {
-    NilExp => <>,
-    BreakExp => <>,
-    IntExp => <>,
-    StringExp => <>,
-    VariableExp => <>,
-    IfExp => <>,
-    SequenceExp => <>,
-    CallExp => <>,
+    NilExp       => <>,
+    BreakExp     => <>,
+    IntExp       => <>,
+    StringExp    => <>,
+    VariableExp  => <>,
+    IfExp        => <>,
+    SequenceExp  => <>,
+    CallExp      => <>,
     OperationExp => <>,
-    RecordExp => <>,
-    AssignExp => <>,
-    WhileExp => <>,
-    ForExp => <>,
-    LetExp => <>,
-    ArrayExp => <>,
-    // TODO: Negation, and, or.
+    RecordExp    => <>,
+    AssignExp    => <>,
+    WhileExp     => <>,
+    ForExp       => <>,
+    LetExp       => <>,
+    ArrayExp     => <>,
+    NegationExp  => <>,
+    AndExp       => <>,
+    OrExp        => <>,
 };
 
 NilExp: Box<Expression> = {
@@ -66,8 +68,8 @@ IntExp: Box<Expression> = {
     r"[0-9]+" => Box::new(Expression::Int(i32::from_str(<>).unwrap())),
 };
 
+// TODO: This is clearly wrong.
 StringExp: Box<Expression> = {
-    // TODO: This is clearly wrong.
     r#"".*""# => Box::new(Expression::String(<>.into()))
 };
 
@@ -77,7 +79,11 @@ VariableExp: Box<Expression> = {
 
 // FIXME: Add if then else
 IfExp: Box<Expression> = {
-    "if" <test:Expression> "then" <t:Expression> => Box::new(Expression::If(test, t, None)),
+    "if" <test:Expression> "then" <t:Expression> => Box::new(Expression::If {
+        test: test,
+        t: t,
+        f: None,
+    }),
     // "if" <test:Expression> "then" <t:Expression> "else" <f:Expression> =>
     //     Expression::If(Box::new(test), Box::new(t), Some(Box::new(f))),
 };
@@ -147,12 +153,38 @@ LetExp: Box<Expression> = {
     }
 };
 
+// FIXME: Don't use $ symbols.
 ArrayExp: Box<Expression> = {
-    // FIXME: Don't use | symbols.
-    <s:Symbol> "|" <l:Expression> "| of" <i:Expression> => Box::new(Expression::Array {
+    <s:Symbol> "#" <l:Expression> "# of" <i:Expression> => Box::new(Expression::Array {
         tdent: s,
         size: l,
         init: i,
+    })
+};
+
+NegationExp: Box<Expression> = {
+    "-" <e:Expression> => Box::new(Expression::Operation {
+        op: Operation::Minus,
+        left: Box::new(Expression::Int(0)),
+        right: e,
+    })
+};
+
+// FIXME: Don't wrap in parens
+AndExp: Box<Expression> = {
+    "(" <e1:Expression> "&" <e2:Expression> ")" => Box::new(Expression::If {
+        test: e1,
+        t: e2,
+        f: Some(Box::new(Expression::Int(0))),
+    })
+};
+
+// FIXME: Don't wrap in parens
+OrExp: Box<Expression> = {
+    "(" <e1:Expression> "|" <e2:Expression> ")" => Box::new(Expression::If {
+        test: e1,
+        t: Box::new(Expression::Int(1)),
+        f: Some(e2),
     })
 };
 

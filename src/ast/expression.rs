@@ -7,7 +7,11 @@ pub enum Expression {
 	Int(i32),
 	String(String),
 	Variable(Box<Variable>),
-	If(Box<Expression>, Box<Expression>, Option<Box<Expression>>),
+	If {
+        test: Box<Expression>,
+        t: Box<Expression>,
+        f: Option<Box<Expression>>,
+    },
 	Sequence(Vec<Box<Expression>>),
 	Call {
 		ident: Symbol,

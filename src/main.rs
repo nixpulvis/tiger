@@ -33,5 +33,6 @@ fn main() {
     println!("{:?}", compile("let var a : int := 1 in a end"));
     println!("{:?}", compile("let function foo(a:int) = () in a end"));
     println!("{:?}", compile("let function foo(a:int) : int = 1 in a end"));
-    println!("{:?}", compile("foo|5| of 0"));
+    println!("{:?}", compile("foo #5# of 0"));
+    println!("{:?}", compile("-5"));
 }
