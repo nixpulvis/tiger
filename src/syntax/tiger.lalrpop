@@ -1,0 +1,276 @@
+use std::str::FromStr;
+use super::ast::*;
+
+grammar["LALR(1)"];
+
+// Macros
+/////////
+
+List<T, D>: Vec<T> = {
+    <v:(<T> D)*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            let mut v = v;
+            v.push(e);
+            v
+        }
+    }
+};
+
+NEList<T, D>: Vec<T> = {
+    <v:(<T> D)*> <e:T> => {
+        let mut v = v;
+        v.push(e);
+        v
+    }
+};
+
+// Symbol
+/////////
+
+pub Symbol: Symbol = {
+    r"[a-zA-Z][a-zA-Z0-9_]*" => <>.into()
+};
+
+// Expression
+/////////////
+
+pub Expression: Box<Expression> = {
+    NilExp       => <>,
+    BreakExp     => <>,
+    IntExp       => <>,
+    StringExp    => <>,
+    VariableExp  => <>,
+    IfExp        => <>,
+    SequenceExp  => <>,
+    CallExp      => <>,
+    OperationExp => <>,
+    RecordExp    => <>,
+    AssignExp    => <>,
+    WhileExp     => <>,
+    ForExp       => <>,
+    LetExp       => <>,
+    ArrayExp     => <>,
+    NegationExp  => <>,
+    AndExp       => <>,
+    OrExp        => <>,
+};
+
+NilExp: Box<Expression> = {
+    "nil" => Box::new(Expression::Nil)
+};
+
+BreakExp: Box<Expression> = {
+    "break" => Box::new(Expression::Break)
+};
+
+IntExp: Box<Expression> = {
+    r"[0-9]+" => Box::new(Expression::Int(i32::from_str(<>).unwrap())),
+};
+
+// TODO: This is clearly wrong.
+StringExp: Box<Expression> = {
+    r#"".*""# => Box::new(Expression::String(<>.into()))
+};
+
+VariableExp: Box<Expression> = {
+    Variable => Box::new(Expression::Variable(<>))
+};
+
+// FIXME: Add if then else
+IfExp: Box<Expression> = {
+    "if" <test:Expression> "then" <t:Expression> => Box::new(Expression::If {
+        test: test,
+        t: t,
+        f: None,
+    }),
+    // "if" <test:Expression> "then" <t:Expression> "else" <f:Expression> =>
+    //     Expression::If(Box::new(test), Box::new(t), Some(Box::new(f))),
+};
+
+SequenceExp: Box<Expression> = {
+    "(" <l:List<Expression, ";">> ")" => Box::new(Expression::Sequence(l))
+};
+
+CallExp: Box<Expression> = {
+    <s:Symbol> "(" <l:List<Expression, ",">> ")" => Box::new(Expression::Call {
+        ident: s,
+        arguments: l,
+    })
+};
+
+// FIXME: Remove parens.
+OperationExp: Box<Expression> = {
+    "(" <l:Expression> <o:Operation> <r:Expression> ")" => Box::new(Expression::Operation {
+        op: o,
+        left: l,
+        right: r,
+    })
+};
+
+RecordExp: Box<Expression> = {
+    <s:Symbol> "{" <l:List<field_create, ",">> "}" => Box::new(Expression::Record {
+        fields: l,
+        tdent: s,
+    })
+};
+
+field_create: (Symbol, Box<Expression>) = {
+    <s:Symbol> "=" <e:Expression> => (s, e)
+};
+
+AssignExp: Box<Expression> = {
+    <s:Symbol> ":=" <e:Expression> => Box::new(Expression::Assign {
+        ident: s,
+        expression: e,
+    })
+};
+
+WhileExp: Box<Expression> = {
+    "while" <t:Expression> "do" <b:Expression> => Box::new(Expression::While {
+        test: t,
+        body: b,
+    })
+};
+
+ForExp: Box<Expression> = {
+    "for" <s:Symbol> ":=" <l:Expression> "to" <h:Expression> "do" <b:Expression> => {
+        Box::new(Expression::For {
+            ident: s,
+            low: l,
+            high: h,
+            body: b,
+        })
+    }
+};
+
+LetExp: Box<Expression> = {
+    "let" <d:NEList<Declaration, "">> "in" <e:Expression> "end" => {
+        Box::new(Expression::Let {
+            declarations: d,
+            body: e,
+        })
+    }
+};
+
+// FIXME: Don't use $ symbols.
+ArrayExp: Box<Expression> = {
+    <s:Symbol> "#" <l:Expression> "# of" <i:Expression> => Box::new(Expression::Array {
+        tdent: s,
+        size: l,
+        init: i,
+    })
+};
+
+NegationExp: Box<Expression> = {
+    "-" <e:Expression> => Box::new(Expression::Operation {
+        op: Operation::Minus,
+        left: Box::new(Expression::Int(0)),
+        right: e,
+    })
+};
+
+// FIXME: Don't wrap in parens
+AndExp: Box<Expression> = {
+    "(" <e1:Expression> "&" <e2:Expression> ")" => Box::new(Expression::If {
+        test: e1,
+        t: e2,
+        f: Some(Box::new(Expression::Int(0))),
+    })
+};
+
+// FIXME: Don't wrap in parens
+OrExp: Box<Expression> = {
+    "(" <e1:Expression> "|" <e2:Expression> ")" => Box::new(Expression::If {
+        test: e1,
+        t: Box::new(Expression::Int(1)),
+        f: Some(e2),
+    })
+};
+
+// Operation
+////////////
+
+pub Operation: Operation = {
+    #[precedence(rank=1, assoc=left)]
+    "+"  => Operation::Plus,
+    "-"  => Operation::Minus,
+    "*"  => Operation::Times,
+    "/"  => Operation::Divide,
+    "="  => Operation::Eq,
+    "<>" => Operation::Neq,
+    "<"  => Operation::Lt,
+    "<=" => Operation::Le,
+    ">"  => Operation::Gt,
+    ">=" => Operation::Ge,
+};
+
+// Variable
+///////////
+
+pub Variable: Box<Variable> = {
+    Symbol => Box::new(Variable::Simple(<>)),
+    <v:Variable> "." <s:Symbol> => Box::new(Variable::Field(v, s)),
+    <v:Variable> "[" <e:Expression> "]" => Box::new(Variable::Subscript(v, e))
+};
+
+// Type
+///////
+
+pub Type: Box<Type> = {
+    <s:Symbol> => Box::new(Type::Name(s)),
+    "{" <l:List<field_dec, ",">> "}" => Box::new(Type::Record(l)),
+    "array of" <s:Symbol> => Box::new(Type::Array(s)),
+};
+
+field_dec: (Symbol, Symbol) = {
+    <i:Symbol> ":" <t:Symbol> => (i, t)
+};
+
+// Declaration
+//////////////
+
+pub Declaration: Box<Declaration> = {
+	FunctionDec => <>,
+	VariableDec => <>,
+	TypeDec => <>,
+};
+
+FunctionDec: Box<Declaration> = {
+    "function" <s:Symbol> "(" <l:List<field_dec, ",">> ") =" <e:Expression> => {
+        Box::new(Declaration::Function {
+            ident: s,
+            parameters: l,
+            result: None,
+            body: e,
+        })
+    },
+    "function" <s:Symbol> "(" <l:List<field_dec, ",">> ") :" <t:Symbol> "=" <e:Expression> =>{
+        Box::new(Declaration::Function {
+            ident: s,
+            parameters: l,
+            result: Some(t),
+            body: e,
+        })
+    },
+};
+
+VariableDec: Box<Declaration> = {
+    "var" <s:Symbol> ":=" <e:Expression> => Box::new(Declaration::Variable {
+        ident: s,
+        tdent: None,
+        init: e,
+    }),
+    "var" <s:Symbol> ":" <t:Symbol> ":=" <e:Expression> => Box::new(Declaration::Variable {
+        ident: s,
+        tdent: Some(t),
+        init: e,
+    }),
+};
+
+TypeDec: Box<Declaration> = {
+    "type" <s:Symbol> "=" <t:Type> => Box::new(Declaration::Type {
+        tdent: s,
+        ty: t,
+    })
+};
