@@ -10,8 +10,8 @@ pub enum Type {
 
 #[cfg(test)]
 mod tests {
-    use syntax::tiger;
-    use syntax::ast::Type as T;
+    use tiger;
+    use ast::Type as T;
 
     macro_rules! test {
         ($source:expr, $expected:expr) => {{

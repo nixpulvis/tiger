@@ -1,3 +1,3 @@
 target
 Cargo.lock
-src/syntax/tiger.rs
+tiger-syntax/src/tiger.rs

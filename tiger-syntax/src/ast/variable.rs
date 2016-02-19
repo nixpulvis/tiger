@@ -10,8 +10,8 @@ pub enum Variable {
 
 #[cfg(test)]
 mod tests {
-    use syntax::tiger;
-    use syntax::ast::{
+    use tiger;
+    use ast::{
         Expression as E,
         Variable as V,
     };

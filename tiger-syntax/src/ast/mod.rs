@@ -16,7 +16,7 @@ mod variable;
 
 #[cfg(test)]
 mod tests {
-    use syntax::tiger;
+    use tiger;
 
     macro_rules! test {
         ($source:expr, $expected:expr) => {{

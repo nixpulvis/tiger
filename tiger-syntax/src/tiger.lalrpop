@@ -120,8 +120,8 @@ field_create: (Symbol, Box<Expression>) = {
 };
 
 AssignExp: Box<Expression> = {
-    <s:Symbol> ":=" <e:Expression> => Box::new(Expression::Assign {
-        ident: s,
+    <v:Variable> ":=" <e:Expression> => Box::new(Expression::Assign {
+        variable: v,
         expression: e,
     })
 };

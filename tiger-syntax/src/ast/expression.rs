@@ -27,7 +27,7 @@ pub enum Expression {
         tdent: Symbol,
     },
     Assign {
-        ident: Symbol,
+        variable: Box<Variable>,
         expression: Box<Expression>,
     },
     While {
@@ -54,8 +54,8 @@ pub enum Expression {
 
 #[cfg(test)]
 mod tests {
-    use syntax::tiger;
-    use syntax::ast::{
+    use tiger;
+    use ast::{
         Expression as E,
         Variable as V,
         Operation as O,
@@ -176,13 +176,16 @@ mod tests {
     #[test]
     fn test_assign() {
         let one = Box::new(E::Int(1));
-        let foo         = Box::new(V::Simple("foo".into()));
-        let foo_bar     = Box::new(V::Field(foo.clone(), "bar".into()));
+        let foo = Box::new(V::Simple("foo".into()));
+        let foo_bar = Box::new(V::Field(foo.clone(), "bar".into()));
         test!("foo := 1", E::Assign {
-            ident: "foo".into(),
+            variable: foo.clone(),
             expression: one.clone(),
         });
-        // test!("foo.bar := 1");
+        test!("foo.bar := 1", E::Assign {
+            variable: foo_bar.clone(),
+            expression: one.clone(),
+        });
     }
 
     #[test]

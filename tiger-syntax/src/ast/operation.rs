@@ -15,8 +15,8 @@ pub enum Operation {
 
 #[cfg(test)]
 mod tests {
-    use syntax::tiger;
-    use syntax::ast::Operation as O;
+    use tiger;
+    use ast::Operation as O;
 
     macro_rules! test {
         ($source:expr, $expected:expr) => {{
