@@ -1,7 +1,8 @@
 use std::str::FromStr;
-use super::ast::*;
+use ast::*;
+use tok::{self, Tok};
 
-grammar["LALR(1)"];
+grammar<'input>(text: &'input str)["LALR(1)"];
 
 // Macros
 /////////
@@ -17,8 +18,8 @@ List<T, D>: Vec<T> = {
     }
 };
 
-NEList<T, D>: Vec<T> = {
-    <v:(<T> D)*> <e:T> => {
+Repeat<T>: Vec<T> = {
+    <v:(<T>)*> <e:T> => {
         let mut v = v;
         v.push(e);
         v
@@ -29,7 +30,8 @@ NEList<T, D>: Vec<T> = {
 /////////
 
 pub Symbol: Symbol = {
-    r"[a-zA-Z][a-zA-Z0-9_]*" => <>.into()
+    // r"[a-zA-Z][a-zA-Z0-9_]*" => <>.into()
+    "SYMBOL" => <>.into()
 };
 
 // Expression
@@ -50,27 +52,29 @@ pub Expression: Box<Expression> = {
     WhileExp     => <>,
     ForExp       => <>,
     LetExp       => <>,
-    ArrayExp     => <>,
+    // ArrayExp     => <>,
     NegationExp  => <>,
     AndExp       => <>,
     OrExp        => <>,
 };
 
 NilExp: Box<Expression> = {
-    "nil" => Box::new(Expression::Nil)
+    "NIL" => Box::new(Expression::Nil)
 };
 
 BreakExp: Box<Expression> = {
-    "break" => Box::new(Expression::Break)
+    "BREAK" => Box::new(Expression::Break)
 };
 
 IntExp: Box<Expression> = {
-    r"[0-9]+" => Box::new(Expression::Int(i32::from_str(<>).unwrap())),
+    // r"[0-9]+" => Box::new(Expression::Int(i32::from_str(<>).unwrap())),
+    "INT" => Box::new(Expression::Int(i32::from_str(<>).unwrap())),
 };
 
 // TODO: This is clearly wrong.
 StringExp: Box<Expression> = {
-    r#"".*""# => Box::new(Expression::String(<>.into()))
+    // r#"".*""# => Box::new(Expression::String(<>.into()))
+    "STRING" => Box::new(Expression::String(<>.into()))
 };
 
 VariableExp: Box<Expression> = {
@@ -79,7 +83,7 @@ VariableExp: Box<Expression> = {
 
 // FIXME: Add if then else
 IfExp: Box<Expression> = {
-    "if" <test:Expression> "then" <t:Expression> => Box::new(Expression::If {
+    "IF" <test:Expression> "THEN" <t:Expression> => Box::new(Expression::If {
         test: test,
         t: t,
         f: None,
@@ -89,11 +93,11 @@ IfExp: Box<Expression> = {
 };
 
 SequenceExp: Box<Expression> = {
-    "(" <l:List<Expression, ";">> ")" => Box::new(Expression::Sequence(l))
+    "LPAREN" <l:List<Expression, "SEMI">> "RPAREN" => Box::new(Expression::Sequence(l))
 };
 
 CallExp: Box<Expression> = {
-    <s:Symbol> "(" <l:List<Expression, ",">> ")" => Box::new(Expression::Call {
+    <s:Symbol> "LPAREN" <l:List<Expression, "COMMA">> "RPAREN" => Box::new(Expression::Call {
         ident: s,
         arguments: l,
     })
@@ -101,7 +105,7 @@ CallExp: Box<Expression> = {
 
 // FIXME: Remove parens.
 OperationExp: Box<Expression> = {
-    "(" <l:Expression> <o:Operation> <r:Expression> ")" => Box::new(Expression::Operation {
+    "LPAREN" <l:Expression> <o:Operation> <r:Expression> "RPAREN" => Box::new(Expression::Operation {
         op: o,
         left: l,
         right: r,
@@ -109,32 +113,32 @@ OperationExp: Box<Expression> = {
 };
 
 RecordExp: Box<Expression> = {
-    <s:Symbol> "{" <l:List<field_create, ",">> "}" => Box::new(Expression::Record {
+    <s:Symbol> "LBRACE" <l:List<field_create, "COMMA">> "RBRACE" => Box::new(Expression::Record {
         fields: l,
         tdent: s,
     })
 };
 
 field_create: (Symbol, Box<Expression>) = {
-    <s:Symbol> "=" <e:Expression> => (s, e)
+    <s:Symbol> "EQ" <e:Expression> => (s, e)
 };
 
 AssignExp: Box<Expression> = {
-    <v:Variable> ":=" <e:Expression> => Box::new(Expression::Assign {
+    <v:Variable> "ASSIGN" <e:Expression> => Box::new(Expression::Assign {
         variable: v,
         expression: e,
     })
 };
 
 WhileExp: Box<Expression> = {
-    "while" <t:Expression> "do" <b:Expression> => Box::new(Expression::While {
+    "WHILE" <t:Expression> "DO" <b:Expression> => Box::new(Expression::While {
         test: t,
         body: b,
     })
 };
 
 ForExp: Box<Expression> = {
-    "for" <s:Symbol> ":=" <l:Expression> "to" <h:Expression> "do" <b:Expression> => {
+    "FOR" <s:Symbol> "ASSIGN" <l:Expression> "TO" <h:Expression> "DO" <b:Expression> => {
         Box::new(Expression::For {
             ident: s,
             low: l,
@@ -145,7 +149,7 @@ ForExp: Box<Expression> = {
 };
 
 LetExp: Box<Expression> = {
-    "let" <d:NEList<Declaration, "">> "in" <e:Expression> "end" => {
+    "LET" <d:Repeat<Declaration>> "IN" <e:Expression> "END" => {
         Box::new(Expression::Let {
             declarations: d,
             body: e,
@@ -155,7 +159,7 @@ LetExp: Box<Expression> = {
 
 // FIXME: Don't use $ symbols.
 ArrayExp: Box<Expression> = {
-    <s:Symbol> "#" <l:Expression> "# of" <i:Expression> => Box::new(Expression::Array {
+    <s:Symbol> "HASH" <l:Expression> "HASH" "OF" <i:Expression> => Box::new(Expression::Array {
         tdent: s,
         size: l,
         init: i,
@@ -163,7 +167,7 @@ ArrayExp: Box<Expression> = {
 };
 
 NegationExp: Box<Expression> = {
-    "-" <e:Expression> => Box::new(Expression::Operation {
+    "MINUS" <e:Expression> => Box::new(Expression::Operation {
         op: Operation::Minus,
         left: Box::new(Expression::Int(0)),
         right: e,
@@ -172,7 +176,7 @@ NegationExp: Box<Expression> = {
 
 // FIXME: Don't wrap in parens
 AndExp: Box<Expression> = {
-    "(" <e1:Expression> "&" <e2:Expression> ")" => Box::new(Expression::If {
+    "LPAREN" <e1:Expression> "AND" <e2:Expression> "RPAREN" => Box::new(Expression::If {
         test: e1,
         t: e2,
         f: Some(Box::new(Expression::Int(0))),
@@ -181,7 +185,7 @@ AndExp: Box<Expression> = {
 
 // FIXME: Don't wrap in parens
 OrExp: Box<Expression> = {
-    "(" <e1:Expression> "|" <e2:Expression> ")" => Box::new(Expression::If {
+    "LPAREN" <e1:Expression> "OR" <e2:Expression> "RPAREN" => Box::new(Expression::If {
         test: e1,
         t: Box::new(Expression::Int(1)),
         f: Some(e2),
@@ -192,16 +196,16 @@ OrExp: Box<Expression> = {
 ////////////
 
 pub Operation: Operation = {
-    "+"  => Operation::Plus,
-    "-"  => Operation::Minus,
-    "*"  => Operation::Times,
-    "/"  => Operation::Divide,
-    "="  => Operation::Eq,
-    "<>" => Operation::Neq,
-    "<"  => Operation::Lt,
-    "<=" => Operation::Le,
-    ">"  => Operation::Gt,
-    ">=" => Operation::Ge,
+    "PLUS"   => Operation::Plus,
+    "MINUS"  => Operation::Minus,
+    "TIMES"  => Operation::Times,
+    "DIVIDE" => Operation::Divide,
+    "EQ"     => Operation::Eq,
+    "NEQ"    => Operation::Neq,
+    "LT"     => Operation::Lt,
+    "LE"     => Operation::Le,
+    "GT"     => Operation::Gt,
+    "GE"     => Operation::Ge,
 };
 
 // Variable
@@ -209,8 +213,8 @@ pub Operation: Operation = {
 
 pub Variable: Box<Variable> = {
     Symbol => Box::new(Variable::Simple(<>)),
-    <v:Variable> "." <s:Symbol> => Box::new(Variable::Field(v, s)),
-    <v:Variable> "[" <e:Expression> "]" => Box::new(Variable::Subscript(v, e))
+    <v:Variable> "DOT" <s:Symbol> => Box::new(Variable::Field(v, s)),
+    <v:Variable> "LBRACK" <e:Expression> "RBRACK" => Box::new(Variable::Subscript(v, e))
 };
 
 // Type
@@ -218,12 +222,12 @@ pub Variable: Box<Variable> = {
 
 pub Type: Box<Type> = {
     <s:Symbol> => Box::new(Type::Name(s)),
-    "{" <l:List<field_dec, ",">> "}" => Box::new(Type::Record(l)),
-    "array of" <s:Symbol> => Box::new(Type::Array(s)),
+    "LBRACE" <l:List<field_dec, "COMMA">> "RBRACE" => Box::new(Type::Record(l)),
+    "ARRAY" "OF" <s:Symbol> => Box::new(Type::Array(s)),
 };
 
 field_dec: (Symbol, Symbol) = {
-    <i:Symbol> ":" <t:Symbol> => (i, t)
+    <i:Symbol> "COLON" <t:Symbol> => (i, t)
 };
 
 // Declaration
@@ -236,7 +240,7 @@ pub Declaration: Box<Declaration> = {
 };
 
 FunctionDec: Box<Declaration> = {
-    "function" <s:Symbol> "(" <l:List<field_dec, ",">> ") =" <e:Expression> => {
+    "FUNCTION" <s:Symbol> "LPAREN" <l:List<field_dec, "COMMA">> "RPAREN" "EQ" <e:Expression> => {
         Box::new(Declaration::Function {
             ident: s,
             parameters: l,
@@ -244,7 +248,7 @@ FunctionDec: Box<Declaration> = {
             body: e,
         })
     },
-    "function" <s:Symbol> "(" <l:List<field_dec, ",">> ") :" <t:Symbol> "=" <e:Expression> =>{
+    "FUNCTION" <s:Symbol> "LPAREN" <l:List<field_dec, "COMMA">> "RPAREN" "COLON" <t:Symbol> "EQ" <e:Expression> => {
         Box::new(Declaration::Function {
             ident: s,
             parameters: l,
@@ -255,12 +259,12 @@ FunctionDec: Box<Declaration> = {
 };
 
 VariableDec: Box<Declaration> = {
-    "var" <s:Symbol> ":=" <e:Expression> => Box::new(Declaration::Variable {
+    "VAR" <s:Symbol> "ASSIGN" <e:Expression> => Box::new(Declaration::Variable {
         ident: s,
         tdent: None,
         init: e,
     }),
-    "var" <s:Symbol> ":" <t:Symbol> ":=" <e:Expression> => Box::new(Declaration::Variable {
+    "VAR" <s:Symbol> "COLON" <t:Symbol> "ASSIGN" <e:Expression> => Box::new(Declaration::Variable {
         ident: s,
         tdent: Some(t),
         init: e,
@@ -268,8 +272,64 @@ VariableDec: Box<Declaration> = {
 };
 
 TypeDec: Box<Declaration> = {
-    "type" <s:Symbol> "=" <t:Type> => Box::new(Declaration::Type {
+    "TYPE" <s:Symbol> "EQ" <t:Type> => Box::new(Declaration::Type {
         tdent: s,
         ty: t,
     })
 };
+
+// Tokens
+/////////
+
+extern {
+    type Location = usize;
+    type Error = tok::Error;
+
+    enum Tok<'input> {
+        "SYMBOL" => Tok::Symbol(<&'input str>),
+        "INT" => Tok::Int(<&'input str>),
+        "STRING" => Tok::String(<&'input str>),
+
+        "NIL" => Tok::Nil,
+        "BREAK" => Tok::Break,
+        "IF" => Tok::If,
+        "THEN" => Tok::Then,
+        "ELSE" => Tok::Else,
+        "TYPE" => Tok::Type,
+        "FUNCTION" => Tok::Function,
+        "VAR" => Tok::Var,
+        "ASSIGN" => Tok::Assign,
+        "WHILE" => Tok::While,
+        "FOR" => Tok::For,
+        "TO" => Tok::To,
+        "DO" => Tok::Do,
+        "LET" => Tok::Let,
+        "IN" => Tok::In,
+        "END" => Tok::End,
+        "HASH" => Tok::Hash,  // TODO: This is a hack for now.
+        "ARRAY" => Tok::Array,
+        "OF" => Tok::Of,
+        "COLON" => Tok::Colon,
+        "SEMI" => Tok::Semi,
+        "COMMA" => Tok::Comma,
+        "LPAREN" => Tok::LParen,
+        "RPAREN" => Tok::RParen,
+        "LBRACK" => Tok::LBrack,
+        "RBRACK" => Tok::RBrack,
+        "LBRACE" => Tok::LBrace,
+        "RBRACE" => Tok::RBrace,
+        "DOT" => Tok::Dot,
+        "EQ" => Tok::Eq,
+        "NEQ" => Tok::Neq,
+        "AND" => Tok::And,
+        "OR" => Tok::Or,
+        "PLUS" => Tok::Plus,
+        "MINUS" => Tok::Minus,
+        "TIMES" => Tok::Times,
+        "DIVIDE" => Tok::Divide,
+        "LT" => Tok::Lt,
+        "LE" => Tok::Le,
+        "GT" => Tok::Gt,
+        "GE" => Tok::Ge,
+    }
+}
