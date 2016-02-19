@@ -1,0 +1,11 @@
+[package]
+name = "tiger-syntax"
+version = "0.1.0"
+authors = ["Nathan Lilienthal <nathan@nixpulvis.com>"]
+build = "build.rs"
+
+[dependencies.lalrpop-util]
+path = "../../lalrpop/lalrpop-util"
+
+[build-dependencies.lalrpop]
+path = "../../lalrpop/lalrpop"
