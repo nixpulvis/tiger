@@ -7,9 +7,23 @@ pub struct Error;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Tok<'input> {
+    /// Symbols start with a letter ([a-zA-Z]), followed by any more
+    /// letters, underscores, or digits. Symbols are case sensitive, and
+    /// keywords cannot be used as symbols.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// foo
+    /// foo_bar1
+    /// FOO
+    /// ```
     Symbol(&'input str),
+    /// An integer literal is one or more digits from 0-9.
     Int(&'input str),
+    /// TODO: Doc.
     String(&'input str),
+
     Nil,
     Break,
     If,
@@ -18,7 +32,6 @@ pub enum Tok<'input> {
     Type,
     Function,
     Var,
-    Assign,
     While,
     For,
     To,
@@ -26,19 +39,21 @@ pub enum Tok<'input> {
     Let,
     In,
     End,
-    Hash,  // TODO: This is a hack for now.
     Array,
     Of,
+
+    Assign,
+    Hash,  // TODO: This is a hack for now.
     Colon,
     Semi,
     Comma,
+    Dot,
     LParen,
     RParen,
     LBrack,
     RBrack,
     LBrace,
     RBrace,
-    Dot,
     Eq,
     Neq,
     And,
