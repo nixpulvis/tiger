@@ -15,12 +15,12 @@ const SOURCE: &'static str = r###"
  someRecord.name := "derp";
  someField[1] := "lvalue";
  someList[0].someField[1] := "complex lvalue";
- if "a"="b" then "c";
+ if "b" then "c";
  while 1 do bar();
  for i := 0 to 10 do foo();
  while 1 do break)
 "###;
 
 fn main() {
-    println!("{:?}", syntax::compile(SOURCE));
+    println!("{:#?}", syntax::compile(SOURCE));
 }
