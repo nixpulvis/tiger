@@ -11,12 +11,14 @@ pub enum Type {
 #[cfg(test)]
 mod tests {
     use tiger;
+    use tok::Lexer;
     use ast::Type as T;
 
     macro_rules! test {
         ($source:expr, $expected:expr) => {{
-            let actual = tiger::parse_Type($source).expect("failed to parse");
-            assert_eq!($expected, *actual);
+            let lexer = Lexer::new($source, 0);
+            let parse = tiger::parse_Type($source, lexer);
+            assert_eq!($expected, *parse.expect("failed to parse"));
         }};
     }
 

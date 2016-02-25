@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Nathan Lilienthal <nathan@nixpulvis.com>"]
 build = "build.rs"
 
+[dependencies]
+unicode-xid = "0.0.2"
+
 [dependencies.lalrpop-util]
 path = "../../lalrpop/lalrpop-util"
 

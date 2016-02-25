@@ -55,6 +55,7 @@ pub enum Expression {
 #[cfg(test)]
 mod tests {
     use tiger;
+    use tok::Lexer;
     use ast::{
         Expression as E,
         Variable as V,
@@ -63,8 +64,9 @@ mod tests {
 
     macro_rules! test {
         ($source:expr, $expected:expr) => {{
-            let actual = tiger::parse_Expression($source).expect("failed to parse");
-            assert_eq!($expected, *actual);
+            let lexer = Lexer::new($source, 0);
+            let parse = tiger::parse_Expression($source, lexer);
+            assert_eq!($expected, *parse.expect("failed to parse"));
         }};
     }
 
