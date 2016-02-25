@@ -1,7 +1,8 @@
+use std::char;
 use std::str::CharIndices;
 use std::iter::Peekable;
 use unicode_xid::UnicodeXID;
-use super::{Tok, Span, Error};
+use tok::{KEYWORDS, Tok, Span, Error};
 
 pub struct Lexer<'input> {
     text: &'input str,
@@ -56,8 +57,48 @@ impl<'input> Lexer<'input> {
             None => (idx0, &self.text[idx0..], self.text.len()),
         };
 
-        // TODO: Keywords.
-        (start, Tok::Symbol(word), end)
+        if let Some(&(_, ref keyword)) = KEYWORDS.iter().find(|&&(s, _)| s == word) {
+            (start, keyword.clone(), end)
+        } else {
+            (start, Tok::Symbol(word), end)
+        }
+    }
+
+    fn number(&mut self, idx0: usize) -> Span<Tok<'input>> {
+        let (start, number, end) = match self.take_while(is_digit) {
+            Some(end) => (idx0, &self.text[idx0..end], end),
+            None => (idx0, &self.text[idx0..], self.text.len()),
+        };
+        (start, Tok::Int(number), end)
+    }
+
+    // TODO: This is not checked for correctness.
+    fn string(&mut self, idx0: usize) -> Result<Span<Tok<'input>>, Error> {
+        // self.shift();
+        let mut escape = false;
+        let terminate = |c: char| {
+            if escape {
+                escape = false;
+                false
+            } else if c == '\\' {
+                escape = true;
+                false
+            } else if c == '"' {
+                true
+            } else {
+                false
+            }
+        };
+        match self.take_until(terminate) {
+            Some(idx1) => {
+                self.shift();
+                let text = &self.text[idx0+1..idx1];
+                Ok((idx0, Tok::String(text), idx1+1))
+            }
+            None => {
+                Err(Error)
+            }
+        }
     }
 }
 
@@ -69,6 +110,12 @@ impl<'input> Iterator for Lexer<'input> {
             return match self.shift() {
                 Some((idx0, c)) if is_identifier_start(c) => {
                     Some(Ok(self.identifierish(idx0)))
+                },
+                Some((idx0, c)) if is_digit(c) => {
+                    Some(Ok(self.number(idx0)))
+                },
+                Some((idx0, '"')) => {
+                    Some(self.string(idx0))
                 },
                 Some((idx0, ':')) => {
                     match self.peek() {
@@ -179,4 +226,8 @@ fn is_identifier_start(c: char) -> bool {
 
 fn is_identifier_continue(c: char) -> bool {
     UnicodeXID::is_xid_continue(c)
+}
+
+fn is_digit(c: char) -> bool {
+    c.is_digit(10)
 }
