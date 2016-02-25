@@ -160,7 +160,6 @@ impl<'input> Iterator for Lexer<'input> {
                     }
                 },
                 Some((_, c)) if c.is_whitespace() => {
-                    self.shift();
                     continue;
                 },
                 Some((idx, _)) => {
