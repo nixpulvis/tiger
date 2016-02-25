@@ -29,8 +29,7 @@ Repeat<T>: Vec<T> = {
 // Symbol
 /////////
 
-pub Symbol: Symbol = {
-    // r"[a-zA-Z][a-zA-Z0-9_]*" => <>.into()
+Symbol: Symbol = {
     "SYMBOL" => <>.into()
 };
 
@@ -195,7 +194,7 @@ OrExp: Box<Expression> = {
 // Operation
 ////////////
 
-pub Operation: Operation = {
+Operation: Operation = {
     "PLUS"   => Operation::Plus,
     "MINUS"  => Operation::Minus,
     "TIMES"  => Operation::Times,
@@ -211,7 +210,7 @@ pub Operation: Operation = {
 // Variable
 ///////////
 
-pub Variable: Box<Variable> = {
+Variable: Box<Variable> = {
     Symbol => Box::new(Variable::Simple(<>)),
     <v:Variable> "DOT" <s:Symbol> => Box::new(Variable::Field(v, s)),
     <v:Variable> "LBRACK" <e:Expression> "RBRACK" => Box::new(Variable::Subscript(v, e))
@@ -220,7 +219,7 @@ pub Variable: Box<Variable> = {
 // Type
 ///////
 
-pub Type: Box<Type> = {
+Type: Box<Type> = {
     <s:Symbol> => Box::new(Type::Name(s)),
     "LBRACE" <l:List<field_dec, "COMMA">> "RBRACE" => Box::new(Type::Record(l)),
     "ARRAY" "OF" <s:Symbol> => Box::new(Type::Array(s)),
@@ -233,7 +232,7 @@ field_dec: (Symbol, Symbol) = {
 // Declaration
 //////////////
 
-pub Declaration: Box<Declaration> = {
+Declaration: Box<Declaration> = {
 	FunctionDec => <>,
 	VariableDec => <>,
 	TypeDec => <>,
