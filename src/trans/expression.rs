@@ -4,7 +4,7 @@ use env::{Env, Value};
 use trans::{Translate, Translation};
 
 impl Translate for ast::Expression {
-    type Lower = Translation;
+    type Prime = Translation;
 
     fn translate(&self,
                  tenv: &mut Env<Type>,
@@ -40,11 +40,7 @@ impl Translate for ast::Expression {
             }
 
             ast::Expression::Variable(ref v) => {
-                // TODO: Translate and lookup variable.
-                Translation {
-                    ir: (),
-                    ty: Type::String,
-                }
+                v.translate(tenv, venv)
             }
 
             ast::Expression::If { ref test, ref t, ref f } => {
@@ -54,7 +50,7 @@ impl Translate for ast::Expression {
 
                 let ty = match f {
                     Some(f) => t.ty.unify(&f.ty),
-                    None => Type::Nil,
+                    None => Type::Unit,
                 };
 
                 Translation {
@@ -64,8 +60,8 @@ impl Translate for ast::Expression {
             }
 
             ast::Expression::Sequence(ref expressions) => {
-                let translations = expressions.translate(tenv, venv);
-                let ty = translations.last().map_or(Type::Nil, |t| t.ty.clone());
+                let expressions = expressions.translate(tenv, venv);
+                let ty = expressions.last().map_or(Type::Nil, |t| t.ty.clone());
 
                 Translation {
                     ir: (),
@@ -75,7 +71,7 @@ impl Translate for ast::Expression {
 
             ast::Expression::Call { ref ident, ref arguments } => {
                 // TODO: Lookup ident.
-                let translations = arguments.translate(tenv, venv);
+                let arguments = arguments.translate(tenv, venv);
 
                 // TODO: Unify arguments and formals.
                 Translation {
@@ -94,6 +90,7 @@ impl Translate for ast::Expression {
                     ty: Type::Int,
                 }
             }
+
             ast::Expression::Record { ref fields, ref tdent } => {
                 // TODO: Unify fields with field type.
                 Translation {
