@@ -7,8 +7,8 @@ impl Translate for ast::Expression {
     type Prime = Translation;
 
     fn translate(&self,
-                 tenv: &mut Env<Type>,
-                 venv: &mut Env<Value>) -> Translation
+                 tenv: &Env<Type>,
+                 venv: &Env<Value>) -> Self::Prime
     {
         match *self {
             ast::Expression::Nil => {
@@ -47,12 +47,10 @@ impl Translate for ast::Expression {
                 let test = test.translate(tenv, venv);
                 let t = t.translate(tenv, venv);
                 let f = f.translate(tenv, venv);
-
                 let ty = match f {
                     Some(f) => t.ty.unify(&f.ty),
                     None => Type::Unit,
                 };
-
                 Translation {
                     ir: (),
                     ty: ty,
@@ -62,7 +60,6 @@ impl Translate for ast::Expression {
             ast::Expression::Sequence(ref expressions) => {
                 let expressions = expressions.translate(tenv, venv);
                 let ty = expressions.last().map_or(Type::Unit, |t| t.ty.clone());
-
                 Translation {
                     ir: (),
                     ty: ty,
@@ -72,7 +69,6 @@ impl Translate for ast::Expression {
             ast::Expression::Call { ref ident, ref arguments } => {
                 // TODO: Lookup ident.
                 let arguments = arguments.translate(tenv, venv);
-
                 // TODO: Unify arguments and formals.
                 Translation {
                     ir: (),
@@ -84,10 +80,22 @@ impl Translate for ast::Expression {
                 let left = left.translate(tenv, venv);
                 let right = right.translate(tenv, venv);
 
-                // TODO: Unify left and right with the correct op.
+                match *op {
+                    ast::Operation::Plus => check_arith_op(&left.ty, &right.ty),
+                    ast::Operation::Minus => check_arith_op(&left.ty, &right.ty),
+                    ast::Operation::Times => check_arith_op(&left.ty, &right.ty),
+                    ast::Operation::Divide => check_arith_op(&left.ty, &right.ty),
+                    ast::Operation::Lt => check_cmp_op(&left.ty, &right.ty),
+                    ast::Operation::Le => check_cmp_op(&left.ty, &right.ty),
+                    ast::Operation::Gt => check_cmp_op(&left.ty, &right.ty),
+                    ast::Operation::Ge => check_cmp_op(&left.ty, &right.ty),
+                    ast::Operation::Eq => check_eq_op(&left.ty, &right.ty),
+                    ast::Operation::Neq => check_eq_op(&left.ty, &right.ty),
+                };
+
                 Translation {
                     ir: (),
-                    ty: Type::Bottom,
+                    ty: Type::Int,
                 }
             }
 
@@ -100,7 +108,9 @@ impl Translate for ast::Expression {
             }
 
             ast::Expression::Assign { ref variable, ref expression } => {
-                // TODO: Unify variable with expression.
+                let variable = variable.translate(tenv, venv);
+                let expression = expression.translate(tenv, venv);
+                variable.ty.unify(&expression.ty);
                 Translation {
                     ir: (),
                     ty: Type::Unit,
@@ -110,8 +120,7 @@ impl Translate for ast::Expression {
             ast::Expression::While { ref test, ref body } => {
                 let test = test.translate(tenv, venv);
                 let body = body.translate(tenv, venv);
-
-                // TODO: Unify test and body.
+                Type::Int.unify(&test.ty);
                 Translation {
                     ir: (),
                     ty: Type::Unit,
@@ -120,16 +129,12 @@ impl Translate for ast::Expression {
 
             ast::Expression::For { ref ident, ref low, ref high, ref body } => {
                 // TODO: Add ident to env.
-
-                // FIXME: Whay envs do we use here?
+                // FIXME: What envs do we use here?
                 let low = low.translate(tenv, venv);
                 let high = high.translate(tenv, venv);
                 let body = body.translate(tenv, venv);
-
-                low.ty.unify(&Type::Int);
-                high.ty.unify(&Type::Int);
-
-                // TODO: Unify body?
+                Type::Int.unify(&low.ty);
+                Type::Int.unify(&high.ty);
                 Translation {
                     ir: (),
                     ty: Type::Unit,
@@ -137,10 +142,12 @@ impl Translate for ast::Expression {
             }
 
             ast::Expression::Let { ref declarations, ref body } => {
-                // TODO: Extend new env with declarations.
-                let body = body.translate(tenv, venv);
-
-                // TODO: Unify body in new env.
+                let tenv = tenv.clone();
+                let venv = venv.clone();
+                let (tenv, venv) = declarations.iter().fold((tenv, venv), |(t, e), d| {
+                    d.translate(&t, &e)
+                });
+                let body = body.translate(&tenv, &venv);
                 Translation {
                     ir: (),
                     ty: body.ty,
@@ -151,15 +158,41 @@ impl Translate for ast::Expression {
                 // TODO: Lookup tdent in env.
                 let size = size.translate(tenv, venv);
                 let init = init.translate(tenv, venv);
-
-                size.ty.unify(&Type::Int);
+                Type::Int.unify(&size.ty);
                 // TODO: Unify init with type of tdent.
-
                 Translation {
                     ir: (),
                     ty: Type::Bottom,
                 }
             }
         }
+    }
+}
+
+fn check_arith_op(left: &Type, right: &Type) {
+    left.unify(right);
+    match *left {
+        Type::Int => {},
+        _ => panic!("cannot perform arithmetic on type `{:?}`", left),
+    }
+}
+
+fn check_cmp_op(left: &Type, right: &Type) {
+    left.unify(right);
+    match *left {
+        Type::Int
+      | Type::String => {},
+        _ => panic!("cannot compare type `{:?}`", left),
+    }
+}
+
+fn check_eq_op(left: &Type, right: &Type) {
+    left.unify(right);
+    match *left {
+        Type::Int
+      | Type::String
+      | Type::Record(_)
+      | Type::Array(_) => {},
+        _ => panic!("cannot test equality of type `{:?}`", left),
     }
 }

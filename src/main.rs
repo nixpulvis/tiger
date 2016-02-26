@@ -32,7 +32,14 @@ fn main() {
     // let ast = syntax::compile(SOURCE);
     // println!("{:#?}", ast);
 
-    let ast = syntax::compile(r###"if 1 then "hi" else "bye""###);
+    let ast = syntax::compile(r###"
+let
+    var x = 1
+    function foo(x: string) = print(x)
+in
+    (foo("hi"); x)
+end
+    "###);
     println!("{:#?}", ast);
 
     // Translate the AST.

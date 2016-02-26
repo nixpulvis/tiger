@@ -3,8 +3,20 @@ use std::collections::HashMap;
 use syntax::ast::Symbol;
 use ty::Type;
 
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Env<T> {
     entries: HashMap<Symbol, T>,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum Value {
+    Variable {
+        ty: Type,
+    },
+    Function {
+        args: Vec<Type>,
+        ret: Type,
+    },
 }
 
 impl Default for Env<Type> {
@@ -35,9 +47,4 @@ impl<T> DerefMut for Env<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.entries
     }
-}
-
-pub enum Value {
-    Variable(Type),
-    Function(Vec<Type>, Type),
 }
