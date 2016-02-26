@@ -50,7 +50,7 @@ impl Translate for ast::Expression {
             ast::Expression::If { ref test, ref t, ref f } => {
                 let test = test.translate(tenv, venv);
                 let t = t.translate(tenv, venv);
-                let f = f.as_ref().map(|e| e.translate(tenv, venv));
+                let f = f.translate(tenv, venv);
 
                 let ty = match f {
                     Some(f) => t.ty.unify(&f.ty),

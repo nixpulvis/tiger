@@ -33,5 +33,16 @@ impl<T: Translate> Translate for Box<T> {
     }
 }
 
+impl<T: Translate> Translate for Option<T> {
+    type Lower = Option<T::Lower>;
+
+    fn translate(&self,
+                 tenv: &mut Env<Type>,
+                 venv: &mut Env<Value>) -> Self::Lower
+    {
+        self.as_ref().map(|e| e.translate(tenv, venv))
+    }
+}
+
 mod translation;
 mod expression;
