@@ -32,7 +32,7 @@ fn main() {
     // let ast = syntax::compile(SOURCE);
     // println!("{:#?}", ast);
 
-    let ast = syntax::compile("if 1 then 2 else 3");
+    let ast = syntax::compile(r###"if 1 then "hi" else "bye""###);
     println!("{:#?}", ast);
 
     // Translate the AST.

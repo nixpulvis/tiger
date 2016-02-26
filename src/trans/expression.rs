@@ -76,7 +76,7 @@ impl Translate for ast::Expression {
                 // TODO: Unify arguments and formals.
                 Translation {
                     ir: (),
-                    ty: Type::Int,
+                    ty: Type::Bottom,
                 }
             }
 
@@ -87,15 +87,15 @@ impl Translate for ast::Expression {
                 // TODO: Unify left and right with the correct op.
                 Translation {
                     ir: (),
-                    ty: Type::Int,
+                    ty: Type::Bottom,
                 }
             }
 
-            ast::Expression::Record { ref fields, ref tdent } => {
+            ast::Expression::Record { ref tdent, ref fields } => {
                 // TODO: Unify fields with field type.
                 Translation {
                     ir: (),
-                    ty: Type::Int,
+                    ty: Type::Bottom,
                 }
             }
 
@@ -108,6 +108,9 @@ impl Translate for ast::Expression {
             }
 
             ast::Expression::While { ref test, ref body } => {
+                let test = test.translate(tenv, venv);
+                let body = body.translate(tenv, venv);
+
                 // TODO: Unify test and body.
                 Translation {
                     ir: (),
@@ -117,7 +120,16 @@ impl Translate for ast::Expression {
 
             ast::Expression::For { ref ident, ref low, ref high, ref body } => {
                 // TODO: Add ident to env.
-                // TODO: Unify low, high, body.
+
+                // FIXME: Whay envs do we use here?
+                let low = low.translate(tenv, venv);
+                let high = high.translate(tenv, venv);
+                let body = body.translate(tenv, venv);
+
+                low.ty.unify(&Type::Int);
+                high.ty.unify(&Type::Int);
+
+                // TODO: Unify body?
                 Translation {
                     ir: (),
                     ty: Type::Unit,
@@ -126,10 +138,12 @@ impl Translate for ast::Expression {
 
             ast::Expression::Let { ref declarations, ref body } => {
                 // TODO: Extend new env with declarations.
+                let body = body.translate(tenv, venv);
+
                 // TODO: Unify body in new env.
                 Translation {
                     ir: (),
-                    ty: Type::Unit,
+                    ty: body.ty,
                 }
             }
 
@@ -137,10 +151,13 @@ impl Translate for ast::Expression {
                 // TODO: Lookup tdent in env.
                 let size = size.translate(tenv, venv);
                 let init = init.translate(tenv, venv);
-                // TODO: Unify size and init.
+
+                size.ty.unify(&Type::Int);
+                // TODO: Unify init with type of tdent.
+
                 Translation {
                     ir: (),
-                    ty: Type::Unit,
+                    ty: Type::Bottom,
                 }
             }
         }
