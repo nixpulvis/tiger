@@ -21,8 +21,11 @@ pub enum Value {
 
 impl Default for Env<Type> {
     fn default() -> Self {
+        let mut base = HashMap::new();
+        base.insert("int".into(), Type::Int);
+        base.insert("string".into(), Type::String);
         Env {
-            entries: HashMap::new(),
+            entries: base,
         }
     }
 }

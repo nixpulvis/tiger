@@ -34,10 +34,10 @@ fn main() {
 
     let ast = syntax::compile(r###"
 let
-    var x = 1
-    function foo(x: string) = print(x)
+    type a = string
+    var x : a := 1
 in
-    (foo("hi"); x)
+    x
 end
     "###);
     println!("{:#?}", ast);

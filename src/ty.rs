@@ -16,10 +16,33 @@ pub enum Type {
 impl Type {
     // TODO: Lattice trait?
     pub fn unify(&self, other: &Type) -> Type {
-        if self == other {
-            self.clone()
+        let resolved_self = self.resolve();
+        let resolved_other = other.resolve();
+        if resolved_self == resolved_other {
+            resolved_self
         } else {
-            panic!("mismatched types: expected {:?}, found {:?}", self, other);
+            panic!("mismatched types: expected {:?}, found {:?}",
+                   resolved_self,
+                   resolved_other);
+        }
+    }
+
+    fn resolve(&self) -> Type {
+        match *self {
+            Type::Record(_) => {
+                unimplemented!()
+            },
+            Type::Array(_) => {
+                unimplemented!()
+            },
+            Type::Name(ref tdent, ref ty) => {
+                if let &Some(ref ty) = ty {
+                    *ty.clone()
+                } else {
+                    panic!("cannot resolve type `{:?}`", ty);
+                }
+            },
+            ref t => t.clone(),
         }
     }
 }

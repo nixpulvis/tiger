@@ -30,13 +30,18 @@ impl Translate for Declaration {
                         },
                     }
                 }
-                let value = Value::Variable { ty: init.ty };
-                venv.insert(ident.clone(), value);
+                let vb = Value::Variable { ty: init.ty };
+                venv.insert(ident.clone(), vb);
                 (tenv, venv)
             }
 
             Type { ref tdent, ref ty } => {
-                (tenv.clone(), venv.clone())
+                let mut tenv = tenv.clone();
+                let venv = venv.clone();
+                let ty = ty.translate(&tenv, &venv);
+                let tb = ty::Type::Name(tdent.clone(), Some(Box::new(ty)));
+                tenv.insert(tdent.clone(), tb);
+                (tenv, venv)
             }
         }
     }

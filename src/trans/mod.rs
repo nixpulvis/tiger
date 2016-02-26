@@ -44,7 +44,8 @@ impl<T: Translate> Translate for Option<T> {
     }
 }
 
-mod translation;
 mod declaration;
 mod expression;
+mod translation;
+mod typ;
 mod variable;
