@@ -61,7 +61,7 @@ impl Translate for ast::Expression {
 
             ast::Expression::Sequence(ref expressions) => {
                 let expressions = expressions.translate(tenv, venv);
-                let ty = expressions.last().map_or(Type::Nil, |t| t.ty.clone());
+                let ty = expressions.last().map_or(Type::Unit, |t| t.ty.clone());
 
                 Translation {
                     ir: (),
