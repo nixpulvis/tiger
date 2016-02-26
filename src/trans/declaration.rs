@@ -1,22 +1,39 @@
-use syntax::ast::Declaration;
-use syntax::ast::Declaration::*;
-use ty;
+use syntax::ast;
+use ty::Type;
 use env::{Env, Value};
 use trans::{Translate, Translation};
 
-impl Translate for Declaration {
-    type Prime = (Env<ty::Type>, Env<Value>);
+impl Translate for ast::Declaration {
+    type Prime = (Env<Type>, Env<Value>);
 
     fn translate(&self,
-                 tenv: &Env<ty::Type>,
+                 tenv: &Env<Type>,
                  venv: &Env<Value>) -> Self::Prime
     {
         match *self {
-            Function { ref ident, ref parameters, ref result, ref body } => {
-                (tenv.clone(), venv.clone())
+            ast::Declaration::Function { ref ident, ref parameters, ref result, ref body } => {
+                let tenv = tenv.clone();
+                let mut venv = venv.clone();
+                let args = parameters.iter().map(|&(_, ref t)| {
+                    match tenv.get(t) {
+                        Some(ty) => ty.clone(),
+                        None => panic!("undefined type: `{}`.", t),
+                    }
+                }).collect();
+                let ret = if let &Some(ref result) = result {
+                    match tenv.get(result) {
+                        Some(ty) => ty.clone(),
+                        None => panic!("undefined type: `{}`.", result),
+                    }
+                } else {
+                    Type::Unit
+                };
+                let fb = Value::Function { args: args, ret: ret };
+                venv.insert(ident.clone(), fb);
+                (tenv, venv)
             }
 
-            Variable { ref ident, ref tdent, ref init } => {
+            ast::Declaration::Variable { ref ident, ref tdent, ref init } => {
                 let tenv = tenv.clone();
                 let mut venv = venv.clone();
                 let init = init.translate(&tenv, &venv);
@@ -35,11 +52,11 @@ impl Translate for Declaration {
                 (tenv, venv)
             }
 
-            Type { ref tdent, ref ty } => {
+            ast::Declaration::Type { ref tdent, ref ty } => {
                 let mut tenv = tenv.clone();
                 let venv = venv.clone();
                 let ty = ty.translate(&tenv, &venv);
-                let tb = ty::Type::Name(tdent.clone(), Some(Box::new(ty)));
+                let tb = Type::Name(tdent.clone(), Some(Box::new(ty)));
                 tenv.insert(tdent.clone(), tb);
                 (tenv, venv)
             }

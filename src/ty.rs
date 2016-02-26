@@ -27,14 +27,8 @@ impl Type {
         }
     }
 
-    fn resolve(&self) -> Type {
+    pub fn resolve(&self) -> Type {
         match *self {
-            Type::Record(_) => {
-                unimplemented!()
-            },
-            Type::Array(_) => {
-                unimplemented!()
-            },
             Type::Name(ref tdent, ref ty) => {
                 if let &Some(ref ty) = ty {
                     *ty.clone()

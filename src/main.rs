@@ -35,9 +35,10 @@ fn main() {
     let ast = syntax::compile(r###"
 let
     type a = string
-    var x : a := 1
+    type b = array of a
+    var buf : b := a #512# of ""
 in
-    x
+    buf[0]
 end
     "###);
     println!("{:#?}", ast);

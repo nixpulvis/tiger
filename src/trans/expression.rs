@@ -67,12 +67,22 @@ impl Translate for ast::Expression {
             }
 
             ast::Expression::Call { ref ident, ref arguments } => {
-                // TODO: Lookup ident.
                 let arguments = arguments.translate(tenv, venv);
-                // TODO: Unify arguments and formals.
+                let ty = match venv.get(ident) {
+                    Some(&Value::Function { ref args, ref ret }) => {
+                        // TODO: Unify arguments and formals.
+                        ret.clone()
+                    },
+                    Some(&Value::Variable { .. }) => {
+                        panic!("`{}` is not a function.", ident);
+                    }
+                    None => {
+                        panic!("undefined function: `{}`.", ident);
+                    },
+                };
                 Translation {
                     ir: (),
-                    ty: Type::Bottom,
+                    ty: ty.resolve(),
                 }
             }
 
@@ -155,14 +165,22 @@ impl Translate for ast::Expression {
             }
 
             ast::Expression::Array { ref tdent, ref size, ref init } => {
-                // TODO: Lookup tdent in env.
                 let size = size.translate(tenv, venv);
                 let init = init.translate(tenv, venv);
+                let aty = match tenv.get(tdent) {
+                    Some(ty) => {
+                        ty.resolve()
+                    },
+                    None => {
+                        panic!("undefined type: `{}`", tdent);
+                    },
+                };
                 Type::Int.unify(&size.ty);
-                // TODO: Unify init with type of tdent.
+                aty.unify(&init.ty);
+                let ty = Type::Array(Box::new(aty));
                 Translation {
                     ir: (),
-                    ty: Type::Bottom,
+                    ty: ty,
                 }
             }
         }

@@ -23,7 +23,11 @@ impl Translate for ast::Type {
             }
 
             ast::Type::Array(ref tdent) => {
-                Type::Bottom
+                let aty = match tenv.get(tdent) {
+                    Some(ty) => ty.resolve(),
+                    None => panic!("undefined type `{:?}`", tdent),
+                };
+                Type::Array(Box::new(aty))
             }
         }
     }

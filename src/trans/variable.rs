@@ -40,10 +40,20 @@ impl Translate for Variable {
             }
 
             Subscript(ref variable, ref expression) => {
-                // TODO: Look up ident in venv.
+                let variable = variable.translate(tenv, venv);
+                let expression = expression.translate(tenv, venv);
+                let ty = match variable.ty {
+                    Type::Array(ty) => {
+                        Type::Int.unify(&expression.ty);
+                        *ty
+                    },
+                    t => {
+                        panic!("subscript access on type `{:?}`", t);
+                    }
+                };
                 Translation {
                     ir: (),
-                    ty: Type::Bottom,
+                    ty: ty,
                 }
             }
         }
