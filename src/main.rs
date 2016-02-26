@@ -1,7 +1,8 @@
 extern crate tiger_syntax as syntax;
 extern crate tiger;
 
-use tiger::ty;
+use tiger::env::Env;
+use tiger::trans::Translate;
 
 const SOURCE: &'static str = r###"
 (nil;
@@ -25,17 +26,16 @@ const SOURCE: &'static str = r###"
 "###;
 
 fn main() {
+    let mut tenv = Env::default();
+    let mut venv = Env::default();
+
     // let ast = syntax::compile(SOURCE);
-    // let ast = syntax::compile("if 1 then 2 else nil");
-    // println!("{:?}", ast);
-    // let ast = syntax::compile("if 1 then 2");
-    // println!("{:?}", ast);
-    // let ast = syntax::compile("1 + 2 * 3");
-    // println!("{:?}", ast);
-    // let ast = syntax::compile("a #1# of 4");
-    // println!("{:?}", ast);
-    let ast = syntax::compile("1 | 2");
-    println!("{:?}", ast);
-    // let trans = ty::translate(&*ast);
-    // println!("{:?}", trans);
+    // println!("{:#?}", ast);
+
+    let ast = syntax::compile("if 1 then 2 else 3");
+    println!("{:#?}", ast);
+
+    // Translate the AST.
+    let trans = ast.translate(&mut tenv, &mut venv);
+    println!("{:?}", trans);
 }

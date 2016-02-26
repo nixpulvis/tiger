@@ -1,7 +1,7 @@
 use ty::Type;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct Translate {
+pub struct Translation {
     pub ir: (),
     pub ty: Type,
 }
