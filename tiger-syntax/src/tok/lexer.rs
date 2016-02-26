@@ -1,4 +1,3 @@
-use std::char;
 use std::str::CharIndices;
 use std::iter::Peekable;
 use unicode_xid::UnicodeXID;
@@ -10,7 +9,7 @@ pub struct Lexer<'input> {
 }
 
 impl<'input> Lexer<'input> {
-    pub fn new(text: &'input str, shift: usize) -> Lexer<'input> {
+    pub fn new(text: &'input str) -> Lexer<'input> {
         Lexer {
             text: text,
             chars: text.char_indices().peekable(),
@@ -209,7 +208,7 @@ impl<'input> Iterator for Lexer<'input> {
                 Some((_, c)) if c.is_whitespace() => {
                     continue;
                 },
-                Some((idx, _)) => {
+                Some((_, _)) => {
                     Some(Err(Error))
                 },
                 None => {
