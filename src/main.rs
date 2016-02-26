@@ -29,10 +29,10 @@ fn main() {
     let mut tenv = Env::default();
     let mut venv = Env::default();
 
-    // let ast = syntax::compile(SOURCE);
+    // let ast = syntax::parse(SOURCE).unwrap();
     // println!("{:#?}", ast);
 
-    let ast = syntax::compile(r###"
+    let ast = syntax::parse(r###"
 let
     type a = string
     type b = array of a
@@ -40,7 +40,7 @@ let
 in
     buf[0]
 end
-    "###);
+    "###).unwrap();
     println!("{:#?}", ast);
 
     // Translate the AST.
