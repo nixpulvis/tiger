@@ -104,7 +104,6 @@ CallExp: Box<Expression> = {
     })
 };
 
-// FIXME: Remove parens.
 OperationExp: Box<Expression> = {
     <l:Expression> <o:Operation> <r:Expression> => Box::new(Expression::Operation {
         op: o,
