@@ -1,4 +1,7 @@
 extern crate tiger_syntax as syntax;
+extern crate tiger;
+
+use tiger::ty;
 
 const SOURCE: &'static str = r###"
 (nil;
@@ -22,5 +25,8 @@ const SOURCE: &'static str = r###"
 "###;
 
 fn main() {
-    println!("{:#?}", syntax::compile(SOURCE));
+    // let ast = syntax::compile(SOURCE);
+    let ast = syntax::compile("(1;\"hi\")");
+    let trans = ty::translate(&*ast);
+    println!("{:?}", trans);
 }

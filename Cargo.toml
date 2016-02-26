@@ -3,5 +3,9 @@ name = "tiger"
 version = "0.1.0"
 authors = ["Nathan Lilienthal <nathan@nixpulvis.com>"]
 
+[[bin]]
+name = "tiger"
+doc = false
+
 [dependencies.tiger-syntax]
 path = "./tiger-syntax"
