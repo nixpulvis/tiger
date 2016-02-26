@@ -51,7 +51,7 @@ pub Expression: Box<Expression> = {
     WhileExp     => <>,
     ForExp       => <>,
     LetExp       => <>,
-    // ArrayExp     => <>,
+    ArrayExp     => <>,
     NegationExp  => <>,
     AndExp       => <>,
     OrExp        => <>,
@@ -79,11 +79,11 @@ VariableExp: Box<Expression> = {
 
 // FIXME: Add if then else
 IfExp: Box<Expression> = {
-    // "IF" <test:Expression> "THEN" <t:Expression> => Box::new(Expression::If {
-    //     test: test,
-    //     t: t,
-    //     f: None,
-    // }),
+    "IF" <test:Expression> "THEN" <t:Expression> => Box::new(Expression::If {
+        test: test,
+        t: t,
+        f: None,
+    }),
     "IF" <test:Expression> "THEN" <t:Expression> "ELSE" <f:Expression> => {
         Box::new(Expression::If {
             test: test,
@@ -106,7 +106,7 @@ CallExp: Box<Expression> = {
 
 // FIXME: Remove parens.
 OperationExp: Box<Expression> = {
-    "LPAREN" <l:Expression> <o:Operation> <r:Expression> "RPAREN" => Box::new(Expression::Operation {
+    <l:Expression> <o:Operation> <r:Expression> => Box::new(Expression::Operation {
         op: o,
         left: l,
         right: r,
@@ -175,18 +175,16 @@ NegationExp: Box<Expression> = {
     })
 };
 
-// FIXME: Don't wrap in parens
 AndExp: Box<Expression> = {
-    "LPAREN" <e1:Expression> "AND" <e2:Expression> "RPAREN" => Box::new(Expression::If {
+    <e1:Expression> "AND" <e2:Expression> => Box::new(Expression::If {
         test: e1,
         t: e2,
         f: Some(Box::new(Expression::Int(0))),
     })
 };
 
-// FIXME: Don't wrap in parens
 OrExp: Box<Expression> = {
-    "LPAREN" <e1:Expression> "OR" <e2:Expression> "RPAREN" => Box::new(Expression::If {
+    <e1:Expression> "OR" <e2:Expression> => Box::new(Expression::If {
         test: e1,
         t: Box::new(Expression::Int(1)),
         f: Some(e2),

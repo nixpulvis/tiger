@@ -26,7 +26,16 @@ const SOURCE: &'static str = r###"
 
 fn main() {
     // let ast = syntax::compile(SOURCE);
-    let ast = syntax::compile("if 1 then 2 else nil");
-    let trans = ty::translate(&*ast);
-    println!("{:?}", trans);
+    // let ast = syntax::compile("if 1 then 2 else nil");
+    // println!("{:?}", ast);
+    // let ast = syntax::compile("if 1 then 2");
+    // println!("{:?}", ast);
+    // let ast = syntax::compile("1 + 2 * 3");
+    // println!("{:?}", ast);
+    // let ast = syntax::compile("a #1# of 4");
+    // println!("{:?}", ast);
+    let ast = syntax::compile("1 | 2");
+    println!("{:?}", ast);
+    // let trans = ty::translate(&*ast);
+    // println!("{:?}", trans);
 }
