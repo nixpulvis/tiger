@@ -66,13 +66,10 @@ BreakExp: Box<Expression> = {
 };
 
 IntExp: Box<Expression> = {
-    // r"[0-9]+" => Box::new(Expression::Int(i32::from_str(<>).unwrap())),
     "INT" => Box::new(Expression::Int(i32::from_str(<>).unwrap())),
 };
 
-// TODO: This is clearly wrong.
 StringExp: Box<Expression> = {
-    // r#"".*""# => Box::new(Expression::String(<>.into()))
     "STRING" => Box::new(Expression::String(<>.into()))
 };
 
@@ -82,13 +79,18 @@ VariableExp: Box<Expression> = {
 
 // FIXME: Add if then else
 IfExp: Box<Expression> = {
-    "IF" <test:Expression> "THEN" <t:Expression> => Box::new(Expression::If {
-        test: test,
-        t: t,
-        f: None,
-    }),
-    // "if" <test:Expression> "then" <t:Expression> "else" <f:Expression> =>
-    //     Expression::If(Box::new(test), Box::new(t), Some(Box::new(f))),
+    // "IF" <test:Expression> "THEN" <t:Expression> => Box::new(Expression::If {
+    //     test: test,
+    //     t: t,
+    //     f: None,
+    // }),
+    "IF" <test:Expression> "THEN" <t:Expression> "ELSE" <f:Expression> => {
+        Box::new(Expression::If {
+            test: test,
+            t: t,
+            f: Some(f),
+        })
+    },
 };
 
 SequenceExp: Box<Expression> = {

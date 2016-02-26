@@ -26,7 +26,7 @@ const SOURCE: &'static str = r###"
 
 fn main() {
     // let ast = syntax::compile(SOURCE);
-    let ast = syntax::compile("(1;\"hi\")");
+    let ast = syntax::compile("if 1 then 2 else nil");
     let trans = ty::translate(&*ast);
     println!("{:?}", trans);
 }

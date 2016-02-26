@@ -63,6 +63,14 @@ pub fn translate(expression: &ast::Expression) -> ir::Translate {
     }
 }
 
+fn unify(t1: &Type, t2: &Type) -> Type {
+    if t1 == t2 {
+        t1.clone()
+    } else {
+        panic!("mismatched types: expected {:?}, found {:?}", t1, t2);
+    }
+}
+
 fn translate_vec(vec: &Vec<Box<ast::Expression>>) -> Vec<ir::Translate> {
     vec.iter().map(|e| translate(&**e)).collect::<Vec<_>>()
 }
@@ -111,10 +119,15 @@ fn translate_if(test: &ast::Expression,
     let t = translate(t);
     let f = f.as_ref().map(|e| translate(&**e));
 
-    // TODO: Unify.
+    let ty = if let Some(f) = f {
+        unify(&t.ty, &f.ty)
+    } else {
+        Type::Nil
+    };
+
     ir::Translate {
         ir: (),
-        ty: Type::Nil,
+        ty: ty,
     }
 }
 
