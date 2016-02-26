@@ -89,7 +89,6 @@ impl Translate for ast::Expression {
             ast::Expression::Operation { ref op, ref left, ref right } => {
                 let left = left.translate(tenv, venv);
                 let right = right.translate(tenv, venv);
-
                 match *op {
                     ast::Operation::Plus => check_arith_op(&left.ty, &right.ty),
                     ast::Operation::Minus => check_arith_op(&left.ty, &right.ty),
@@ -102,7 +101,6 @@ impl Translate for ast::Expression {
                     ast::Operation::Eq => check_eq_op(&left.ty, &right.ty),
                     ast::Operation::Neq => check_eq_op(&left.ty, &right.ty),
                 };
-
                 Translation {
                     ir: (),
                     ty: Type::Int,
@@ -110,6 +108,7 @@ impl Translate for ast::Expression {
             }
 
             ast::Expression::Record { ref tdent, ref fields } => {
+                unimplemented!();
                 // TODO: Unify fields with field type.
                 Translation {
                     ir: (),
@@ -138,6 +137,7 @@ impl Translate for ast::Expression {
             }
 
             ast::Expression::For { ref ident, ref low, ref high, ref body } => {
+                unimplemented!();
                 // TODO: Add ident to env.
                 // FIXME: What envs do we use here?
                 let low = low.translate(tenv, venv);

@@ -19,7 +19,7 @@ impl Translate for ast::Type {
             }
 
             ast::Type::Record(ref fields) => {
-                Type::Bottom
+                unimplemented!()
             }
 
             ast::Type::Array(ref tdent) => {
