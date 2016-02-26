@@ -21,7 +21,7 @@ mod tests {
 
     macro_rules! test {
         ($source:expr, $expected:expr) => {{
-            let lexer = Lexer::new($source, 0);
+            let lexer = Lexer::new($source);
             let parse = tiger::parse_Symbol($source, lexer);
             assert_eq!($expected, parse.expect("failed to parse"));
         }};

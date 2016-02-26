@@ -29,7 +29,7 @@ Repeat<T>: Vec<T> = {
 // Symbol
 /////////
 
-Symbol: Symbol = {
+pub Symbol: Symbol = {
     "SYMBOL" => <>.into()
 };
 
@@ -77,7 +77,6 @@ VariableExp: Box<Expression> = {
     Variable => Box::new(Expression::Variable(<>))
 };
 
-// FIXME: Add if then else
 IfExp: Box<Expression> = {
     "IF" <test:Expression> "THEN" <t:Expression> => Box::new(Expression::If {
         test: test,
@@ -149,10 +148,10 @@ ForExp: Box<Expression> = {
 };
 
 LetExp: Box<Expression> = {
-    "LET" <d:Repeat<Declaration>> "IN" <e:Expression> "END" => {
+    "LET" <d:Repeat<Declaration>> "IN" <es:List<Expression, "SEMI">> "END" => {
         Box::new(Expression::Let {
             declarations: d,
-            body: e,
+            body: Box::new(Expression::Sequence(es)),
         })
     }
 };
@@ -193,7 +192,7 @@ OrExp: Box<Expression> = {
 // Operation
 ////////////
 
-Operation: Operation = {
+pub Operation: Operation = {
     "PLUS"   => Operation::Plus,
     "MINUS"  => Operation::Minus,
     "TIMES"  => Operation::Times,
@@ -209,7 +208,7 @@ Operation: Operation = {
 // Variable
 ///////////
 
-Variable: Box<Variable> = {
+pub Variable: Box<Variable> = {
     Symbol => Box::new(Variable::Simple(<>)),
     <v:Variable> "DOT" <s:Symbol> => Box::new(Variable::Field(v, s)),
     <v:Variable> "LBRACK" <e:Expression> "RBRACK" => Box::new(Variable::Subscript(v, e))
@@ -218,7 +217,7 @@ Variable: Box<Variable> = {
 // Type
 ///////
 
-Type: Box<Type> = {
+pub Type: Box<Type> = {
     <s:Symbol> => Box::new(Type::Name(s)),
     "LBRACE" <l:List<field_dec, "COMMA">> "RBRACE" => Box::new(Type::Record(l)),
     "ARRAY" "OF" <s:Symbol> => Box::new(Type::Array(s)),
@@ -231,7 +230,7 @@ field_dec: (Symbol, Symbol) = {
 // Declaration
 //////////////
 
-Declaration: Box<Declaration> = {
+pub Declaration: Box<Declaration> = {
 	FunctionDec => <>,
 	VariableDec => <>,
 	TypeDec => <>,

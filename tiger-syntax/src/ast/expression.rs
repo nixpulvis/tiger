@@ -59,12 +59,14 @@ mod tests {
     use ast::{
         Expression as E,
         Variable as V,
+        Declaration as D,
         Operation as O,
+        Type as T,
     };
 
     macro_rules! test {
         ($source:expr, $expected:expr) => {{
-            let lexer = Lexer::new($source, 0);
+            let lexer = Lexer::new($source);
             let parse = tiger::parse_Expression($source, lexer);
             assert_eq!($expected, *parse.expect("failed to parse"));
         }};
@@ -210,7 +212,34 @@ mod tests {
         });
     }
 
-    // TODO: Test let expressions.
+    #[test]
+    fn test_let() {
+        let one = Box::new(E::Int(1));
+        let two = Box::new(E::Int(2));
+        let any = Box::new(T::Record(vec![("any".into(), "int".into())]));
+        let any_dec = Box::new(D::Type {
+            tdent: "any".into(),
+            ty: any,
+        });
+        let buffer_dec = Box::new(D::Variable {
+            ident: "buffer".into(),
+            tdent: None,
+            init: one.clone(),
+        });
+        let body = Box::new(E::Sequence(vec![one.clone(), two.clone()]));
+        test!(r###"
+let
+    type any = {any : int}
+    var buffer := 1
+in
+    1;
+    2
+end
+"###, E::Let {
+            declarations: vec![any_dec, buffer_dec],
+            body: body,
+        });
+    }
 
     #[test]
     fn test_array() {

@@ -33,7 +33,7 @@ pub enum Tok<'input> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// foo
     /// foo_bar1
     /// FOO
