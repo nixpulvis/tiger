@@ -1,7 +1,7 @@
 use syntax::ast;
 use ty::Type;
 use env::{Env, Value};
-use trans::{Translate, Translation};
+use trans::{Translate, Translation, MutualDeclarations};
 
 impl Translate for ast::Expression {
     type Prime = Translation;
@@ -154,7 +154,8 @@ impl Translate for ast::Expression {
             ast::Expression::Let { ref declarations, ref body } => {
                 let tenv = tenv.clone();
                 let venv = venv.clone();
-                let (tenv, venv) = declarations.iter().fold((tenv, venv), |(t, e), d| {
+                let mutuals = MutualDeclarations::new(&declarations);
+                let (tenv, venv) = mutuals.into_iter().fold((tenv, venv), |(t, e), d| {
                     d.translate(&t, &e)
                 });
                 let body = body.translate(&tenv, &venv);

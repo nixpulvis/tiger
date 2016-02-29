@@ -34,11 +34,12 @@ fn main() {
 
     let ast = syntax::parse(r###"
 let
-    type a = string
-    type b = array of a
-    var buf : b := a #512# of ""
+    type a = b
+    type b = int
+    var foo : a := 1
+
 in
-    buf[0]
+    foo
 end
     "###).unwrap();
     println!("{:#?}", ast);

@@ -2,6 +2,7 @@ use ty::Type;
 use env::{Env, Value};
 
 pub use self::translation::Translation;
+pub use self::declaration::{MutualDeclarations, MutualDeclarationsIter};
 
 pub trait Translate {
     type Prime;
