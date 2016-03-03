@@ -37,22 +37,31 @@ pub Symbol: Symbol = {
 /////////////
 
 pub Expression: Box<Expression> = {
+    OpenExp   => <>,
+    ClosedExp => <>,
+};
+
+OpenExp: Box<Expression> = {
+    if_open_exp  => <>,
+    assign_exp   => <>,
+    while_exp    => <>,
+    for_exp      => <>,
+    array_exp    => <>,
+    negation_exp => <>,
+};
+
+ClosedExp: Box<Expression> = {
     nil_exp       => <>,
     break_exp     => <>,
     int_exp       => <>,
     string_exp    => <>,
     variable_exp  => <>,
-    if_exp        => <>,
+    if_closed_exp => <>,
     sequence_exp  => <>,
     call_exp      => <>,
     operation_exp => <>,
     record_exp    => <>,
-    assign_exp    => <>,
-    while_exp     => <>,
-    for_exp       => <>,
     let_exp       => <>,
-    array_exp     => <>,
-    negation_exp  => <>,
     and_exp       => <>,
     or_exp        => <>,
 };
@@ -83,13 +92,26 @@ variable_exp: Box<Expression> = {
 };
 
 #[inline]
-if_exp: Box<Expression> = {
-    // "IF" <test:Expression> "THEN" <t:Expression> => Box::new(Expression::If {
-    //     test: test,
-    //     t: t,
-    //     f: None,
-    // }),
-    "IF" <test:Expression> "THEN" <t:Expression> "ELSE" <f:Expression> => {
+if_open_exp: Box<Expression> = {
+    "IF" <test:Expression> "THEN" <t:Expression> => {
+        Box::new(Expression::If {
+            test: test,
+            t: t,
+            f: None,
+        })
+    },
+    "IF" <test:Expression> "THEN" <t:ClosedExp> "ELSE" <f:OpenExp> => {
+        Box::new(Expression::If {
+            test: test,
+            t: t,
+            f: Some(f),
+        })
+    },
+};
+
+#[inline]
+if_closed_exp: Box<Expression> = {
+    "IF" <test:Expression> "THEN" <t:ClosedExp> "ELSE" <f:ClosedExp> => {
         Box::new(Expression::If {
             test: test,
             t: t,
