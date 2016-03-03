@@ -6,6 +6,7 @@ use tok::{KEYWORDS, Tok, Span, Error};
 pub struct Lexer<'input> {
     text: &'input str,
     chars: Peekable<CharIndices<'input>>,
+    comment_level: usize,
 }
 
 impl<'input> Lexer<'input> {
@@ -13,6 +14,7 @@ impl<'input> Lexer<'input> {
         Lexer {
             text: text,
             chars: text.char_indices().peekable(),
+            comment_level: 0,
         }
     }
 
@@ -106,6 +108,30 @@ impl<'input> Iterator for Lexer<'input> {
 
     fn next(&mut self) -> Option<Result<Span<Tok<'input>>, Error>> {
         loop {
+            // Skip over all comments.
+            if self.comment_level != 0 {
+                match self.shift() {
+                    Some((_, '*')) => {
+                        match self.shift() {
+                            Some((_, '/')) => {
+                                self.comment_level -= 1;
+                            },
+                            _ => {},
+                        }
+                    },
+                    Some((_, '/')) => {
+                        match self.shift() {
+                            Some((_, '*')) => {
+                                self.comment_level += 1;
+                            },
+                            _ => {},
+                        }
+                    },
+                    _ => {},
+                };
+                continue;
+            }
+
             return match self.shift() {
                 Some((idx0, c)) if is_identifier_start(c) => {
                     Some(Ok(self.identifierish(idx0)))
@@ -192,7 +218,15 @@ impl<'input> Iterator for Lexer<'input> {
                     Some(Ok((idx0, Tok::Times, idx0+1)))
                 },
                 Some((idx0, '/')) => {
-                    Some(Ok((idx0, Tok::Divide, idx0+1)))
+                    match self.peek() {
+                        Some((_, '*')) => {
+                            self.comment_level += 1;
+                            continue;
+                        },
+                        _ => {
+                            Some(Ok((idx0, Tok::Divide, idx0+1)))
+                        },
+                    }
                 },
                 Some((idx0, '>')) => {
                     match self.peek() {

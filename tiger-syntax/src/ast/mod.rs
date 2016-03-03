@@ -31,4 +31,14 @@ mod tests {
     fn test_symbol() {
         test!("foo", "foo");
     }
+
+    #[test]
+    fn test_simple_comment() {
+        test!("/* Ignore me. */ foo", "foo");
+    }
+
+    #[test]
+    fn test_nested_comment() {
+        test!("/* Ignore me /* and me */ please. */ foo", "foo");
+    }
 }
