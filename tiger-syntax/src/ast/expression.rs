@@ -113,6 +113,11 @@ mod tests {
             t: one.clone(),
             f: None,
         });
+        test!("if 1 then 1 else 1", E::If {
+            test: one.clone(),
+            t: one.clone(),
+            f: Some(one.clone()),
+        });
     }
 
     #[test]
@@ -244,7 +249,7 @@ end
     #[test]
     fn test_array() {
         let one = Box::new(E::Int(1));
-        test!("foo #1# of 1", E::Array {
+        test!("foo [1] of 1", E::Array {
             tdent: "foo".into(),
             size: one.clone(),
             init: one.clone(),
