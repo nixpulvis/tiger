@@ -50,7 +50,16 @@ mod tests {
         let one = Box::new(E::Int(1));
         let foo = Box::new(V::Simple("foo".into()));
         let foo_bar = Box::new(V::Field(foo.clone(), "bar".into()));
-        let foo_sub = Box::new(V::Subscript(foo.clone(), one.clone()));
         test!("foo.bar[1]", V::Subscript(foo_bar.clone(), one.clone()));
+    }
+
+    #[test]
+    fn test_long_chain() {
+        let one = Box::new(E::Int(1));
+        let foo = Box::new(V::Simple("foo".into()));
+        let foo_bar = Box::new(V::Field(foo.clone(), "bar".into()));
+        let foo_bar_sub = Box::new(V::Subscript(foo_bar.clone(), one.clone()));
+        let foo_bar_sub_baz = Box::new(V::Field(foo_bar_sub.clone(), "baz".into()));
+        test!("foo.bar[1].baz[1]", V::Subscript(foo_bar_sub_baz.clone(), one.clone()));
     }
 }
