@@ -37,47 +37,53 @@ pub Symbol: Symbol = {
 /////////////
 
 pub Expression: Box<Expression> = {
-    NilExp       => <>,
-    BreakExp     => <>,
-    IntExp       => <>,
-    StringExp    => <>,
-    VariableExp  => <>,
-    IfExp        => <>,
-    SequenceExp  => <>,
-    CallExp      => <>,
-    OperationExp => <>,
-    RecordExp    => <>,
-    AssignExp    => <>,
-    WhileExp     => <>,
-    ForExp       => <>,
-    LetExp       => <>,
-    ArrayExp     => <>,
-    NegationExp  => <>,
-    AndExp       => <>,
-    OrExp        => <>,
+    nil_exp       => <>,
+    break_exp     => <>,
+    int_exp       => <>,
+    string_exp    => <>,
+    variable_exp  => <>,
+    if_exp        => <>,
+    sequence_exp  => <>,
+    call_exp      => <>,
+    operation_exp => <>,
+    record_exp    => <>,
+    assign_exp    => <>,
+    while_exp     => <>,
+    for_exp       => <>,
+    let_exp       => <>,
+    array_exp     => <>,
+    negation_exp  => <>,
+    and_exp       => <>,
+    or_exp        => <>,
 };
 
-NilExp: Box<Expression> = {
+#[inline]
+nil_exp: Box<Expression> = {
     "NIL" => Box::new(Expression::Nil)
 };
 
-BreakExp: Box<Expression> = {
+#[inline]
+break_exp: Box<Expression> = {
     "BREAK" => Box::new(Expression::Break)
 };
 
-IntExp: Box<Expression> = {
+#[inline]
+int_exp: Box<Expression> = {
     "INT" => Box::new(Expression::Int(i32::from_str(<>).unwrap())),
 };
 
-StringExp: Box<Expression> = {
+#[inline]
+string_exp: Box<Expression> = {
     "STRING" => Box::new(Expression::String(<>.into()))
 };
 
-VariableExp: Box<Expression> = {
+#[inline]
+variable_exp: Box<Expression> = {
     Variable => Box::new(Expression::Variable(<>))
 };
 
-IfExp: Box<Expression> = {
+#[inline]
+if_exp: Box<Expression> = {
     // "IF" <test:Expression> "THEN" <t:Expression> => Box::new(Expression::If {
     //     test: test,
     //     t: t,
@@ -92,18 +98,21 @@ IfExp: Box<Expression> = {
     },
 };
 
-SequenceExp: Box<Expression> = {
+#[inline]
+sequence_exp: Box<Expression> = {
     "LPAREN" <l:List<Expression, "SEMI">> "RPAREN" => Box::new(Expression::Sequence(l))
 };
 
-CallExp: Box<Expression> = {
+#[inline]
+call_exp: Box<Expression> = {
     <s:Symbol> "LPAREN" <l:List<Expression, "COMMA">> "RPAREN" => Box::new(Expression::Call {
         ident: s,
         arguments: l,
     })
 };
 
-OperationExp: Box<Expression> = {
+#[inline]
+operation_exp: Box<Expression> = {
     "LPAREN" <l:Expression> <o:Operation> <r:Expression> "RPAREN" => Box::new(Expression::Operation {
         op: o,
         left: l,
@@ -111,33 +120,37 @@ OperationExp: Box<Expression> = {
     })
 };
 
-RecordExp: Box<Expression> = {
+#[inline]
+record_exp: Box<Expression> = {
     <s:Symbol> "LBRACE" <l:List<field_create, "COMMA">> "RBRACE" => Box::new(Expression::Record {
         fields: l,
         tdent: s,
     })
 };
 
-// #[inline]
+#[inline]
 field_create: (Symbol, Box<Expression>) = {
     <s:Symbol> "EQ" <e:Expression> => (s, e)
 };
 
-AssignExp: Box<Expression> = {
+#[inline]
+assign_exp: Box<Expression> = {
     <v:Variable> "ASSIGN" <e:Expression> => Box::new(Expression::Assign {
         variable: v,
         expression: e,
     })
 };
 
-WhileExp: Box<Expression> = {
+#[inline]
+while_exp: Box<Expression> = {
     "WHILE" <t:Expression> "DO" <b:Expression> => Box::new(Expression::While {
         test: t,
         body: b,
     })
 };
 
-ForExp: Box<Expression> = {
+#[inline]
+for_exp: Box<Expression> = {
     "FOR" <s:Symbol> "ASSIGN" <l:Expression> "TO" <h:Expression> "DO" <b:Expression> => {
         Box::new(Expression::For {
             ident: s,
@@ -148,7 +161,8 @@ ForExp: Box<Expression> = {
     }
 };
 
-LetExp: Box<Expression> = {
+#[inline]
+let_exp: Box<Expression> = {
     "LET" <d:Repeat<Declaration>> "IN" <es:List<Expression, "SEMI">> "END" => {
         Box::new(Expression::Let {
             declarations: d,
@@ -158,7 +172,8 @@ LetExp: Box<Expression> = {
 };
 
 // FIXME: Don't use $ symbols.
-ArrayExp: Box<Expression> = {
+#[inline]
+array_exp: Box<Expression> = {
     "LPAREN" <s:Symbol> "HASH" <l:Expression> "HASH" "OF" <i:Expression> "RPAREN" => Box::new(Expression::Array {
         tdent: s,
         size: l,
@@ -166,7 +181,8 @@ ArrayExp: Box<Expression> = {
     })
 };
 
-NegationExp: Box<Expression> = {
+#[inline]
+negation_exp: Box<Expression> = {
     "MINUS" <e:Expression> => Box::new(Expression::Operation {
         op: Operation::Minus,
         left: Box::new(Expression::Int(0)),
@@ -174,7 +190,8 @@ NegationExp: Box<Expression> = {
     })
 };
 
-AndExp: Box<Expression> = {
+#[inline]
+and_exp: Box<Expression> = {
     "LPAREN" <e1:Expression> "AND" <e2:Expression> "RPAREN" => Box::new(Expression::If {
         test: e1,
         t: e2,
@@ -182,7 +199,8 @@ AndExp: Box<Expression> = {
     })
 };
 
-OrExp: Box<Expression> = {
+#[inline]
+or_exp: Box<Expression> = {
     "LPAREN" <e1:Expression> "OR" <e2:Expression> "RPAREN" => Box::new(Expression::If {
         test: e1,
         t: Box::new(Expression::Int(1)),
@@ -224,6 +242,7 @@ pub Type: Box<Type> = {
     "ARRAY" "OF" <s:Symbol> => Box::new(Type::Array(s)),
 };
 
+#[inline]
 field_dec: (Symbol, Symbol) = {
     <i:Symbol> "COLON" <t:Symbol> => (i, t)
 };
@@ -232,12 +251,13 @@ field_dec: (Symbol, Symbol) = {
 //////////////
 
 pub Declaration: Box<Declaration> = {
-	FunctionDec => <>,
-	VariableDec => <>,
-	TypeDec => <>,
+	function_dec => <>,
+	variable_dec => <>,
+	type_dec => <>,
 };
 
-FunctionDec: Box<Declaration> = {
+#[inline]
+function_dec: Box<Declaration> = {
     "FUNCTION" <s:Symbol> "LPAREN" <l:List<field_dec, "COMMA">> "RPAREN" "EQ" <e:Expression> => {
         Box::new(Declaration::Function {
             ident: s,
@@ -256,7 +276,8 @@ FunctionDec: Box<Declaration> = {
     },
 };
 
-VariableDec: Box<Declaration> = {
+#[inline]
+variable_dec: Box<Declaration> = {
     "VAR" <s:Symbol> "ASSIGN" <e:Expression> => Box::new(Declaration::Variable {
         ident: s,
         tdent: None,
@@ -269,7 +290,8 @@ VariableDec: Box<Declaration> = {
     }),
 };
 
-TypeDec: Box<Declaration> = {
+#[inline]
+type_dec: Box<Declaration> = {
     "TYPE" <s:Symbol> "EQ" <t:Type> => Box::new(Declaration::Type {
         tdent: s,
         ty: t,
