@@ -78,11 +78,11 @@ VariableExp: Box<Expression> = {
 };
 
 IfExp: Box<Expression> = {
-    "IF" <test:Expression> "THEN" <t:Expression> => Box::new(Expression::If {
-        test: test,
-        t: t,
-        f: None,
-    }),
+    // "IF" <test:Expression> "THEN" <t:Expression> => Box::new(Expression::If {
+    //     test: test,
+    //     t: t,
+    //     f: None,
+    // }),
     "IF" <test:Expression> "THEN" <t:Expression> "ELSE" <f:Expression> => {
         Box::new(Expression::If {
             test: test,
@@ -104,7 +104,7 @@ CallExp: Box<Expression> = {
 };
 
 OperationExp: Box<Expression> = {
-    <l:Expression> <o:Operation> <r:Expression> => Box::new(Expression::Operation {
+    "LPAREN" <l:Expression> <o:Operation> <r:Expression> "RPAREN" => Box::new(Expression::Operation {
         op: o,
         left: l,
         right: r,
@@ -118,6 +118,7 @@ RecordExp: Box<Expression> = {
     })
 };
 
+// #[inline]
 field_create: (Symbol, Box<Expression>) = {
     <s:Symbol> "EQ" <e:Expression> => (s, e)
 };
@@ -158,7 +159,7 @@ LetExp: Box<Expression> = {
 
 // FIXME: Don't use $ symbols.
 ArrayExp: Box<Expression> = {
-    <s:Symbol> "HASH" <l:Expression> "HASH" "OF" <i:Expression> => Box::new(Expression::Array {
+    "LPAREN" <s:Symbol> "HASH" <l:Expression> "HASH" "OF" <i:Expression> "RPAREN" => Box::new(Expression::Array {
         tdent: s,
         size: l,
         init: i,
@@ -174,7 +175,7 @@ NegationExp: Box<Expression> = {
 };
 
 AndExp: Box<Expression> = {
-    <e1:Expression> "AND" <e2:Expression> => Box::new(Expression::If {
+    "LPAREN" <e1:Expression> "AND" <e2:Expression> "RPAREN" => Box::new(Expression::If {
         test: e1,
         t: e2,
         f: Some(Box::new(Expression::Int(0))),
@@ -182,7 +183,7 @@ AndExp: Box<Expression> = {
 };
 
 OrExp: Box<Expression> = {
-    <e1:Expression> "OR" <e2:Expression> => Box::new(Expression::If {
+    "LPAREN" <e1:Expression> "OR" <e2:Expression> "RPAREN" => Box::new(Expression::If {
         test: e1,
         t: Box::new(Expression::Int(1)),
         f: Some(e2),
