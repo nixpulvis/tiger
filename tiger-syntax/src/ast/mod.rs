@@ -7,6 +7,8 @@ pub use self::operation::Operation;
 pub use self::typ::Type;
 pub use self::variable::Variable;
 
+pub type Ast = Box<Expression>;
+
 mod declaration;
 mod expression;
 mod operation;
