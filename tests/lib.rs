@@ -12,7 +12,8 @@ macro_rules! test_file {
             let mut file = File::open($path).unwrap();
             let mut source = String::new();
             file.read_to_string(&mut source).expect("error reading fixture");
-            tiger::compile(&source);
+            let ast = syntax::parse(&source).unwrap();
+            let translation = tiger::translate(&ast).unwrap();
         }
     };
 }
@@ -28,7 +29,7 @@ test_file!(test_smoke_test5, "fixtures/test5.tig");
 test_file!(test_smoke_test6, "fixtures/test6.tig");
 test_file!(test_smoke_test7, "fixtures/test7.tig");
 test_file!(test_smoke_test8, "fixtures/test8.tig");
-test_file!(test_smoke_test9, "fixtures/test9.tig", should_panic);
+test_file!(test_smoke_test9, "fixtures/test9.tig");
 test_file!(test_smoke_test10, "fixtures/test10.tig", should_panic);
 test_file!(test_smoke_test11, "fixtures/test11.tig", should_panic);
 test_file!(test_smoke_test12, "fixtures/test12.tig");
