@@ -22,6 +22,8 @@ macro_rules! error {
     }};
 }
 
+pub use syntax::parse;
+
 pub fn translate(ast: &Box<syntax::ast::Expression>) -> Result<Translation, String> {
     let tenv = Env::default();
     let venv = Env::default();
