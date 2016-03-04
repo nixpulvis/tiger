@@ -1,49 +1,60 @@
 extern crate tiger_syntax as syntax;
 extern crate tiger;
 
-use tiger::env::Env;
-use tiger::trans::Translate;
+use std::env;
+use std::io::prelude::*;
+use std::fs::File;
 
-const SOURCE: &'static str = r###"
-(nil;
- 123;
- -123;
- foo();
- bar(i);
- concat(chr(3), chr(2));
- "hello";
- myFirstTestRecord {};
- mySecondTestRecord { name="derp" };
- myThirdTestRecord { name="derp", age=1 };
- someVar := 1;
- someRecord.name := "derp";
- someField[1] := "lvalue";
- someList[0].someField[1] := "complex lvalue";
- if "b" then "c";
- while 1 do bar();
- for i := 0 to 10 do foo();
- while 1 do break)
-"###;
+macro_rules! error {
+    ($fmt:expr, $kind:expr) => {{
+        print!("{} error: ", $kind);
+        print!(concat!($fmt, "\n"));
+        ::std::process::exit(1);
+    }};
+    ($fmt:expr, $kind:expr, $($arg:tt)*) => {{
+        print!("{} error: ", $kind);
+        print!(concat!($fmt, "\n"), $($arg)*);
+        ::std::process::exit(1);
+    }};
+}
+
+// TODO: Error types and `unwrap_or_error()` function on Results.
 
 fn main() {
-    let mut tenv = Env::default();
-    let mut venv = Env::default();
+    let args: Vec<String> = env::args().into_iter().collect();
+    if let Some(source_file_path) = args.get(1) {
+        match File::open(source_file_path) {
+            Ok(mut source_file) => {
+                let mut source = String::new();
+                source_file.read_to_string(&mut source).unwrap_or_else(|e| {
+                    error!("{}", "driver", e);
+                });
+                println!("SOURCE:");
+                println!("{}", source);
 
-    // let ast = syntax::parse(SOURCE).unwrap();
-    // println!("{:#?}", ast);
+                let ast = match syntax::parse(&source) {
+                    Ok(a) => a,
+                    Err(e) => {
+                        error!("{:?}", "syntax", e);
+                    }
+                };
+                println!("AST:");
+                println!("{:#?}", ast);
 
-    let ast = syntax::parse(r###"
-let
-    type a = string
-    type b = array of a
-    var buf : b := a #512# of ""
-in
-    buf[0]
-end
-    "###).unwrap();
-    println!("{:#?}", ast);
-
-    // Translate the AST.
-    let trans = ast.translate(&mut tenv, &mut venv);
-    println!("{:?}", trans);
+                let translation = match tiger::translate(&ast) {
+                    Ok(t) => t,
+                    Err(e) => {
+                        error!("{:?}", "translation", e);
+                    },
+                };
+                println!("TRANSLATION");
+                println!("{:?}", translation);
+            },
+            Err(e) => {
+                error!("no such file: {} <{}>", "driver", source_file_path, e);
+            },
+        };
+    } else {
+        error!("no file given.", "driver");
+    }
 }

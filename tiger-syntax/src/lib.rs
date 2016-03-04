@@ -5,10 +5,10 @@ pub mod tok;
 
 pub fn parse(source: &str) -> Result<Box<ast::Expression>, ()> {
     let lexer = tok::Lexer::new(source);
-    Ok(match tiger::parse_Expression(source, lexer) {
-        Ok(ast) => ast,
-        Err(e) => panic!("parse failed: {:?}", e),
-    })
+    match tiger::parse_Expression(source, lexer) {
+        Ok(ast) => Ok(ast),
+        Err(e) => Err(()),
+    }
 }
 
 mod tiger;
