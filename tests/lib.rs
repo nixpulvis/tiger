@@ -13,7 +13,7 @@ macro_rules! test_file {
             let mut source = String::new();
             file.read_to_string(&mut source).expect("error reading fixture");
             let ast = syntax::parse(&source).unwrap();
-            let translation = tiger::translate(&ast).unwrap();
+            tiger::translate(&ast).unwrap();
         }
     };
 }
