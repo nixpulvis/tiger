@@ -115,10 +115,34 @@ impl Translate for ast::Expression {
             }
 
             ast::Expression::Record { ref tdent, ref fields } => {
-                // TODO: Unify fields with field type.
+                let ty = match tenv.get(tdent) {
+                    Some(t) => {
+                        match t.resolve() {
+                            Type::Record(ref formals) => {
+                                if formals.len() != fields.len() {
+                                    panic!("`{}` arity mismatch, expected {} fields, given {}.",
+                                        tdent, formals.len(), fields.len());
+                                }
+                                for (formal, field) in formals.iter().zip(fields) {
+                                    if formal.0 != field.0 {
+                                        panic!("`{}` field name mismatch, expecting {}, given {}.",
+                                            tdent, formal.0, field.0);
+                                    }
+                                    let field = field.1.translate(tenv, venv);
+                                    formal.1.unify(&field.ty);
+                                }
+                            },
+                            _ => {
+                                panic!("type `{}` is not a record type.", tdent);
+                            }
+                        }
+                        t.clone()
+                    },
+                    None => panic!("undefined type `{}`.", tdent),
+                };
                 Translation {
                     ir: (),
-                    ty: Type::Bottom,
+                    ty: ty
                 }
             }
 
