@@ -1,5 +1,4 @@
 use syntax::ast;
-use ir;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Type {
@@ -29,7 +28,7 @@ impl Type {
 
     pub fn resolve(&self) -> Type {
         match *self {
-            Type::Name(ref tdent, ref ty) => {
+            Type::Name(_, ref ty) => {
                 if let &Some(ref ty) = ty {
                     *ty.clone()
                 } else {

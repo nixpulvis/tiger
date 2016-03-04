@@ -20,7 +20,7 @@ fn main() {
                 println!("SOURCE:");
                 println!("{}", source);
 
-                tiger::driver::compile(&source);
+                tiger::driver::compile(&source).unwrap();
             },
             Err(e) => {
                 error!("no such file: {} <{}>", "driver", source_file_path, e);

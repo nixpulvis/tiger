@@ -1,7 +1,7 @@
 use syntax::ast;
 use ty::Type;
 use env::{Env, Value};
-use trans::{Translate, Translation};
+use trans::Translate;
 
 impl Translate for ast::Declaration {
     type Prime = (Env<Type>, Env<Value>);
@@ -28,6 +28,7 @@ impl Translate for ast::Declaration {
                 } else {
                     Type::Unit
                 };
+                // TODO Check body.
                 let fb = Value::Function { args: args, ret: ret };
                 venv.insert(ident.clone(), fb);
                 (tenv, venv)

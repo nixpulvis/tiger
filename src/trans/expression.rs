@@ -25,28 +25,29 @@ impl Translate for ast::Expression {
                 }
             }
 
-            ast::Expression::Int(ref i) => {
+            ast::Expression::Int(ref _integer) => {
                 Translation {
                     ir: (),
                     ty: Type::Int,
                 }
             }
 
-            ast::Expression::String(ref s) => {
+            ast::Expression::String(ref _string) => {
                 Translation {
                     ir: (),
                     ty: Type::String,
                 }
             }
 
-            ast::Expression::Variable(ref v) => {
-                v.translate(tenv, venv)
+            ast::Expression::Variable(ref variable) => {
+                variable.translate(tenv, venv)
             }
 
             ast::Expression::If { ref test, ref t, ref f } => {
                 let test = test.translate(tenv, venv);
                 let t = t.translate(tenv, venv);
                 let f = f.translate(tenv, venv);
+                Type::Int.unify(&test.ty);
                 let ty = match f {
                     Some(f) => t.ty.unify(&f.ty),
                     None => Type::Unit,
@@ -70,7 +71,13 @@ impl Translate for ast::Expression {
                 let arguments = arguments.translate(tenv, venv);
                 let ty = match venv.get(ident) {
                     Some(&Value::Function { ref args, ref ret }) => {
-                        // TODO: Unify arguments and formals.
+                        if args.len() != arguments.len() {
+                            panic!("`{}` arity mismatch, expected {} arguments, given {}.",
+                                ident, args.len(), arguments.len());
+                        }
+                        for (formal, argument) in args.iter().zip(arguments) {
+                            formal.unify(&argument.ty);
+                        }
                         ret.clone()
                     },
                     Some(&Value::Variable { .. }) => {
@@ -108,7 +115,6 @@ impl Translate for ast::Expression {
             }
 
             ast::Expression::Record { ref tdent, ref fields } => {
-                unimplemented!();
                 // TODO: Unify fields with field type.
                 Translation {
                     ir: (),
@@ -130,6 +136,7 @@ impl Translate for ast::Expression {
                 let test = test.translate(tenv, venv);
                 let body = body.translate(tenv, venv);
                 Type::Int.unify(&test.ty);
+                // TODO: What type should we unify body with?
                 Translation {
                     ir: (),
                     ty: Type::Unit,
@@ -137,7 +144,6 @@ impl Translate for ast::Expression {
             }
 
             ast::Expression::For { ref ident, ref low, ref high, ref body } => {
-                unimplemented!();
                 // TODO: Add ident to env.
                 // FIXME: What envs do we use here?
                 let low = low.translate(tenv, venv);
@@ -145,6 +151,7 @@ impl Translate for ast::Expression {
                 let body = body.translate(tenv, venv);
                 Type::Int.unify(&low.ty);
                 Type::Int.unify(&high.ty);
+                // TODO: What type should we unify body with?
                 Translation {
                     ir: (),
                     ty: Type::Unit,
@@ -212,5 +219,72 @@ fn check_eq_op(left: &Type, right: &Type) {
       | Type::Record(_)
       | Type::Array(_) => {},
         _ => panic!("cannot test equality of type `{:?}`", left),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use {parse, translate};
+    use ty::Type;
+
+    #[test]
+    fn check_function_call_arguments_good() {
+        let source = r###"
+let
+    function foo(x: int, y: string) : int = 1
+in
+    foo(1, "works");
+end
+        "###;
+        let ast = parse(&source).unwrap();
+        let translation = translate(&ast).unwrap();
+        assert_eq!(Type::Int, translation.ty);
+    }
+
+    // TODO: These *shouldn't* panic once we get translate to stop panicing.
+    #[test]
+    #[should_panic]
+    fn check_function_call_arguments_wrong_type() {
+        let source = r###"
+let
+    function foo(x: int, y: string) : int = 1
+in
+    foo(1, 2);
+end
+        "###;
+        let ast = parse(&source).unwrap();
+        assert!(translate(&ast).is_err());
+    }
+
+    // TODO: These *shouldn't* panic once we get translate to stop panicing.
+    #[test]
+    #[should_panic]
+    fn check_function_call_arguments_too_few() {
+        let source = r###"
+let
+    function foo(x: int, y: string) : int = 1
+in
+    foo();
+end
+        "###;
+        let ast = parse(&source).unwrap();
+        assert!(translate(&ast).is_err());
+    }
+
+    // TODO: These *shouldn't* panic once we get translate to stop panicing.
+    #[test]
+    #[should_panic]
+    fn check_function_call_arguments_too_many() {
+        let source = r###"
+let
+    function foo(x: int, y: string) : int = 1
+in
+    foo(1, "no work", 2);
+end
+        "###;
+        let ast = parse(&source).unwrap();
+        assert!(translate(&ast).is_err());
+
     }
 }
