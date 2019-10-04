@@ -2,7 +2,7 @@ use std::str::FromStr;
 use ast::*;
 use tok::{self, Tok};
 
-grammar<'input>(text: &'input str)["LALR(1)"];
+grammar<'input>(text: &'input str);
 
 // Macros
 /////////

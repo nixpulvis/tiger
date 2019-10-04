@@ -5,10 +5,8 @@ authors = ["Nathan Lilienthal <nathan@nixpulvis.com>"]
 build = "build.rs"
 
 [dependencies]
+lalrpop-util = "*"
 unicode-xid = "0.0.2"
 
-[dependencies.lalrpop-util]
-path = "../../lalrpop/lalrpop-util"
-
-[build-dependencies.lalrpop]
-path = "../../lalrpop/lalrpop"
+[build-dependencies]
+lalrpop = "*"
